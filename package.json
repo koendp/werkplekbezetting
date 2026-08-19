@@ -1,0 +1,11 @@
+{
+  "name": "werkplekbezetting",
+  "version": "1.0.0",
+  "description": "Dashboard bezetting werkplekken op basis van Disruptive Technologies sensoren",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "refresh": "node src/refresh.js"
+  }
+}

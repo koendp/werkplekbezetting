@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bezetting werkplekken</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>&#128188;</text></svg>">
+</head>
+<body>
+
+<header>
+  <div class="titelblok">
+    <h1>Bezetting werkplekken</h1>
+    <span class="meta" id="kopmeta"></span>
+  </div>
+  <button class="knop" id="ververs">Historiek verversen</button>
+</header>
+
+<nav role="tablist">
+  <button role="tab" data-tab="analyse" aria-selected="true">Bezetting over tijd</button>
+  <button role="tab" data-tab="nu" aria-selected="false">Nu</button>
+  <button role="tab" data-tab="sensoren" aria-selected="false">Sensoren</button>
+</nav>
+
+<main>
+
+  <!-- ── Bezetting over tijd ────────────────────────────────────────────── -->
+  <section id="tab-analyse">
+    <div class="filters">
+      <label>Periode
+        <select id="f-dagen">
+          <option value="7">laatste 7 dagen</option>
+          <option value="30" selected>laatste 30 dagen</option>
+          <option value="60">laatste 60 dagen</option>
+        </select>
+      </label>
+      <label>Kantooruren
+        <select id="f-uren">
+          <option value="8-17" selected>08 tot 17 uur</option>
+          <option value="9-17">09 tot 17 uur</option>
+          <option value="7-19">07 tot 19 uur</option>
+          <option value="0-24">de hele dag</option>
+        </select>
+      </label>
+      <label>Groepering
+        <select id="f-groep">
+          <option value="verdieping" selected>per verdieping</option>
+          <option value="wijk">per werkwijk</option>
+          <option value="lokaal">per lokaal</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="analyse-inhoud" class="laden">Bezig met laden...</div>
+  </section>
+
+  <!-- ── Nu ─────────────────────────────────────────────────────────────── -->
+  <section id="tab-nu" hidden>
+    <div id="nu-inhoud" class="laden">Bezig met laden...</div>
+  </section>
+
+  <!-- ── Sensoren ───────────────────────────────────────────────────────── -->
+  <section id="tab-sensoren" hidden>
+    <div id="sensoren-inhoud" class="laden">Bezig met laden...</div>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    Gegevens uit de bezettingssensoren van Provincie Oost-Vlaanderen. Een sensor
+    meldt een wissel gemiddeld 6 minuten nadat die zich voordoet, dus het beeld
+    loopt altijd enkele minuten achter.
+  </p>
+  <img class="logo kleur" src="logo-pov.png" alt="Provincie Oost-Vlaanderen">
+  <img class="logo negatief" src="logo-pov-wit.png" alt="Provincie Oost-Vlaanderen">
+</footer>
+
+<div id="tooltip" role="status" aria-live="polite"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

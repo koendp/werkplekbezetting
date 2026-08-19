@@ -1,0 +1,336 @@
+/* Werkplekdashboard in de huisstijl van Provincie Oost-Vlaanderen.
+   Primaire kleuren: oranje C86B02 en donkergrijs 565555, met tints daarvan.
+   De oranje verloopschaal voor de warmtekaart bestaat uit tints en shades van
+   diezelfde huisstijlkleur, dus er komt geen kleur van buiten het palet bij. */
+
+:root {
+  color-scheme: light;
+
+  --plane: #f4f1ee;
+  --surface: #ffffff;
+  --ink: #3a3938;
+  --ink-2: #565555;
+  --ink-3: #7d7a76;
+  --raster: #e6e1dc;
+  --as: #c9c4bf;
+  --rand: rgba(86, 85, 85, 0.16);
+
+  --oranje: #c86b02;
+  --oranje-diep: #985102;
+
+  --serie-1: #c86b02;
+  --serie-2: #565555;
+
+  --goed: #375d28;
+  --aandacht: #c86b02;
+  --kritiek: #aa2126;
+
+  /* Verloopschaal: bijna wit leunt tegen het vlak aan, druk staat er het verst van. */
+  --seq-1: #fbf3eb;
+  --seq-2: #f5e4d1;
+  --seq-3: #edd0ae;
+  --seq-4: #e5b886;
+  --seq-5: #db9d58;
+  --seq-6: #d08128;
+  --seq-7: #c86b02;
+  --seq-8: #985102;
+
+  --radius: 8px;
+  --font: 'Meta Pro', 'Aptos', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) {
+    color-scheme: dark;
+
+    --plane: #121211;
+    --surface: #1a1a19;
+    --ink: #f2f0ec;
+    --ink-2: #c3c0b9;
+    --ink-3: #9b9791;
+    --raster: #2e2c2a;
+    --as: #3b3937;
+    --rand: rgba(242, 240, 236, 0.14);
+
+    --serie-2: #e1dfda;
+
+    --goed: #6e9b4f;
+    --kritiek: #e5231b;
+
+    /* Omgekeerde richting: op een donker vlak betekent lichter juist drukker. */
+    --seq-1: #2f2416;
+    --seq-2: #462e13;
+    --seq-3: #603a10;
+    --seq-4: #7a470c;
+    --seq-5: #945309;
+    --seq-6: #ae5f05;
+    --seq-7: #c86b02;
+    --seq-8: #d69144;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--ink-2);
+  font: 15px/1.55 var(--font);
+  text-align: left;
+}
+
+/* ── Kop met het logo ─────────────────────────────────────────────────────── */
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--rand);
+  background: var(--surface);
+}
+
+header .titelblok { flex: 1 1 auto; min-width: 0; }
+
+header h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--oranje);
+}
+
+header .meta { display: block; color: var(--ink-3); font-size: 13px; margin-top: 3px; }
+
+header h1 + .meta { margin-top: 3px; }
+
+nav {
+  display: flex;
+  gap: 2px;
+  padding: 0 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rand);
+}
+
+nav button {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 11px 14px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+
+nav button:hover { color: var(--ink); }
+nav button[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--oranje); }
+
+main { padding: 20px 24px 60px; max-width: 1400px; }
+section[hidden] { display: none; }
+
+/* ── Bedieningselementen ──────────────────────────────────────────────────── */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--ink-3); }
+
+select, input[type='search'], button.knop {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--as);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+button.knop { cursor: pointer; font-weight: 600; }
+button.knop:hover { border-color: var(--oranje); color: var(--oranje); }
+button.knop[disabled] { opacity: 0.55; cursor: progress; }
+
+select:focus-visible, input:focus-visible, button:focus-visible {
+  outline: 2px solid var(--oranje);
+  outline-offset: 2px;
+}
+
+/* ── Tegels ───────────────────────────────────────────────────────────────── */
+
+.tegels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.tegel {
+  background: var(--surface);
+  border: 1px solid var(--rand);
+  border-radius: var(--radius);
+  border-top: 3px solid var(--oranje);
+  padding: 14px 16px;
+}
+
+.tegel .titel { font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
+.tegel .waarde { font-size: 32px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); }
+.tegel .bij { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+
+/* ── Kaarten met grafieken ────────────────────────────────────────────────── */
+
+.kaarten { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 14px; }
+
+.kaart {
+  background: var(--surface);
+  border: 1px solid var(--rand);
+  border-radius: var(--radius);
+  padding: 16px 18px 12px;
+  min-width: 0;
+}
+
+.kaart.breed { grid-column: 1 / -1; }
+
+/* Kaarttitels blijven in donkergrijs: oranje haalt op deze korpsgrootte de
+   contrastnorm voor tekst niet. Oranje is voorbehouden aan de hoofdtitel. */
+.kaart h2 { margin: 0 0 2px; font-size: 16px; font-weight: 700; color: var(--ink); }
+.kaart .uitleg { margin: 0 0 14px; font-size: 12.5px; color: var(--ink-3); }
+
+.legende { display: flex; gap: 16px; font-size: 12.5px; color: var(--ink-2); margin: 0 0 10px; }
+.legende span { display: inline-flex; align-items: center; gap: 6px; }
+.legende i { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+.legende i.streep { width: 14px; height: 3px; border-radius: 1.5px; }
+
+/* Schaalverklaring bij de warmtekaart. */
+.schaal { display: flex; align-items: center; gap: 3px; font-size: 11.5px; color: var(--ink-3); margin: 12px 0 4px; }
+.schaal span:first-child { margin-right: 5px; }
+.schaal span:last-child { margin-left: 5px; white-space: nowrap; }
+.schaal i { display: block; width: 22px; height: 10px; border-radius: 1px; }
+
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font: 11px var(--font); fill: var(--ink-3); }
+svg .as-lijn { stroke: var(--as); stroke-width: 1; }
+svg .raster { stroke: var(--raster); stroke-width: 1; }
+svg .mark { fill: var(--serie-1); }
+svg .mark-2 { fill: var(--serie-2); }
+svg .vlak { fill: var(--serie-1); opacity: 0.14; }
+svg .lijn { fill: none; stroke: var(--serie-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+svg .waardelabel { fill: var(--ink-2); font-weight: 700; }
+svg .trefvlak { fill: transparent; cursor: crosshair; }
+svg .kruisdraad { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }
+
+/* ── Tabellen ─────────────────────────────────────────────────────────────── */
+
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead th {
+  text-align: left;
+  font-weight: 700;
+  color: var(--ink-3);
+  font-size: 12px;
+  padding: 6px 10px 6px 0;
+  border-bottom: 1px solid var(--as);
+  white-space: nowrap;
+}
+thead th.sorteerbaar { cursor: pointer; }
+thead th.sorteerbaar:hover { color: var(--oranje); }
+tbody td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--raster); }
+tbody tr:hover { background: var(--plane); }
+td.getal, th.getal { text-align: right; font-variant-numeric: tabular-nums; }
+
+.balkcel { min-width: 130px; }
+.balk { height: 8px; border-radius: 2px; background: var(--raster); overflow: hidden; }
+.balk > i { display: block; height: 100%; background: var(--serie-1); border-radius: 2px; }
+
+.tabelhoes { overflow-x: auto; max-height: 480px; overflow-y: auto; }
+
+/* ── Statusmarkering: altijd icoon plus tekst, nooit enkel kleur ──────────── */
+
+.status { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.status::before { font-weight: 700; }
+.status.goed::before { content: '\2713'; color: var(--goed); }
+.status.aandacht::before { content: '\26A0'; color: var(--aandacht); }
+.status.kritiek::before { content: '\2715'; color: var(--kritiek); }
+
+.stip { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: baseline; }
+.stip.bezet { background: var(--serie-1); }
+.stip.vrij { background: var(--raster); border: 1px solid var(--as); }
+
+/* ── Tooltip ──────────────────────────────────────────────────────────────── */
+
+#tooltip {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--as);
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  padding: 8px 11px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  max-width: 260px;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+#tooltip.aan { opacity: 1; }
+#tooltip b { display: block; font-size: 13px; margin-bottom: 2px; }
+
+.melding {
+  padding: 12px 14px;
+  border: 1px solid var(--rand);
+  border-left: 3px solid var(--oranje);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+
+.laden { color: var(--ink-3); padding: 40px 0; }
+
+/* ── Voettekst ────────────────────────────────────────────────────────────── */
+
+/* Het logo staat rechtsonder, verticaal, met rondom ruim meer witruimte dan
+   het derde van de labelbreedte dat het handboek als minimum vraagt. */
+footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 8px 24px 44px;
+  max-width: 1400px;
+}
+
+footer p {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+  max-width: 62ch;
+}
+
+footer .logo {
+  flex: 0 0 auto;
+  height: 132px;
+  width: auto;
+  margin: 0 12px 0 0;
+}
+
+footer .logo.negatief { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) footer .logo.kleur { display: none; }
+  :root:where(:not([data-theme='light'])) footer .logo.negatief { display: block; }
+}
+
+@media (max-width: 700px) {
+  footer { flex-direction: column; align-items: flex-start; }
+  footer .logo { height: 104px; align-self: flex-end; }
+}
