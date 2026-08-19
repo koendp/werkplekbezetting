@@ -12,18 +12,30 @@ const BASE = 'https://api.disruptive-technologies.com/v2';
 
 let cachedConfig = null;
 
+/**
+ * Sleutels komen uit de omgevingsvariabelen. Staan ze daar niet, dan valt het
+ * terug op een .env-bestand naast dit project. Zo werkt hetzelfde bestand
+ * lokaal en op een server waar geen .env staat.
+ */
 export function config() {
   if (cachedConfig) return cachedConfig;
 
-  const env = {};
-  for (const line of readFileSync(join(root, '.env'), 'utf8').split(/\r?\n/)) {
-    const m = line.match(/^\s*([^#=]+)=(.*)$/);
-    if (m) env[m[1].trim()] = m[2].trim();
+  const env = { ...process.env };
+
+  if (!env.DT_KEY_ID) {
+    try {
+      for (const line of readFileSync(join(root, '.env'), 'utf8').split(/\r?\n/)) {
+        const m = line.match(/^\s*([^#=]+)=(.*)$/);
+        if (m && !env[m[1].trim()]) env[m[1].trim()] = m[2].trim();
+      }
+    } catch {
+      // Geen .env: dan moeten de omgevingsvariabelen volstaan.
+    }
   }
 
   const missing = ['DT_KEY_ID', 'DT_SECRET', 'DT_PROJECT_ID'].filter((k) => !env[k]);
   if (missing.length) {
-    throw new Error(`Ontbrekende sleutels in .env: ${missing.join(', ')}`);
+    throw new Error(`Ontbrekende instellingen: ${missing.join(', ')}. Zet ze in .env of als omgevingsvariabele.`);
   }
 
   cachedConfig = {

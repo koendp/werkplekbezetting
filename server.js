@@ -3,6 +3,10 @@
  *
  * Start met: node server.js   (of dubbelklik start.bat)
  * Open dan:  http://localhost:5180
+ *
+ * Online draait het dashboard niet op deze server maar op de losse functies in
+ * api/. Beide gebruiken dezelfde bouwstenen uit src/, zodat er maar één
+ * uitvoering van de logica bestaat.
  */
 
 import { createServer } from 'node:http';
@@ -11,6 +15,9 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, extname, normalize } from 'node:path';
 import { toestellen, bewaardeHistoriek, verversHistoriek } from './src/cache.js';
 import { bereken, groepeer, lokaleDagStart } from './src/aggregate.js';
+import { bouwNu, bouwSensoren } from './src/model.js';
+import { controleerWachtwoord, maakKoekje, wisKoekje, authActief, aangemeld } from './src/auth.js';
+import { bewaak, stuurJson } from './src/http.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(root, 'public');
@@ -22,6 +29,7 @@ const MIMETYPES = {
   '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
 };
@@ -80,121 +88,6 @@ async function analyse({ dagen, startUur, eindUur }) {
   return uitkomst;
 }
 
-// ── Live toestand ─────────────────────────────────────────────────────────────
-
-function telPerGroep(werkplekken, sleutel) {
-  const groepen = new Map();
-  for (const w of werkplekken) {
-    const naam = w[sleutel] || 'Onbekend';
-    if (!groepen.has(naam)) groepen.set(naam, { naam, totaal: 0, bezet: 0, vrij: 0, onbekend: 0 });
-    const g = groepen.get(naam);
-    g.totaal++;
-    if (w.toestand === 'OCCUPIED') g.bezet++;
-    else if (w.toestand === 'NOT_OCCUPIED') g.vrij++;
-    else g.onbekend++;
-  }
-  return [...groepen.values()]
-    .map((g) => ({ ...g, graad: g.totaal ? +(g.bezet / g.totaal).toFixed(3) : 0 }))
-    .sort((a, b) => b.totaal - a.totaal);
-}
-
-async function nu() {
-  const info = await toestellen({ maxLeeftijdMs: 30 * 1000 });
-  const werkplekken = info.toestellen.filter((t) => t.type === 'deskOccupancy');
-
-  const bezet = werkplekken.filter((w) => w.toestand === 'OCCUPIED').length;
-  const vrij = werkplekken.filter((w) => w.toestand === 'NOT_OCCUPIED').length;
-
-  return {
-    opgehaald: info.opgehaald,
-    totaal: werkplekken.length,
-    bezet,
-    vrij,
-    onbekend: werkplekken.length - bezet - vrij,
-    graad: werkplekken.length ? +(bezet / werkplekken.length).toFixed(3) : 0,
-    perVerdieping: telPerGroep(werkplekken, 'verdiepingNaam'),
-    perWijk: telPerGroep(werkplekken, 'wijk'),
-    werkplekken: werkplekken.map((w) => ({
-      id: w.id,
-      naam: w.naam,
-      lokaal: w.lokaal,
-      verdiepingNaam: w.verdiepingNaam,
-      wijk: w.wijk,
-      toestand: w.toestand,
-      toestandSinds: w.toestandSinds,
-    })),
-  };
-}
-
-// ── Toestand van de sensoren ──────────────────────────────────────────────────
-
-async function sensoren() {
-  const info = await toestellen({ maxLeeftijdMs: 30 * 1000 });
-  const nuMs = Date.now();
-
-  const lijst = info.toestellen
-    .filter((t) => t.type !== 'ccon')
-    .map((t) => {
-      const stilMs = t.laatsteSignaal ? nuMs - Date.parse(t.laatsteSignaal) : null;
-      const bezetSindsMs = t.toestand === 'OCCUPIED' && t.toestandSinds ? nuMs - Date.parse(t.toestandSinds) : null;
-
-      const stil = stilMs === null || stilMs > 24 * 3600 * 1000;
-
-      const problemen = [];
-      if (!t.actief) problemen.push('uitgeschakeld');
-      if (stil) problemen.push('geen signaal (>24u)');
-      // De toestand UNKNOWN komt vaak voor bij sensoren die net stil vallen; die
-      // melden we niet apart, want het echte probleem staat er dan al.
-      if (t.batterijStatus === 'LOW' || t.batterijStatus === 'CRITICAL') {
-        problemen.push('batterij ' + t.batterijStatus.toLowerCase());
-      } else if (t.batterij !== null && t.batterij <= 20) {
-        problemen.push('batterij laag');
-      }
-      if (!stil && t.signaal !== null && t.signaal < 20) problemen.push('zwak signaal');
-      if (!stil && bezetSindsMs !== null && bezetSindsMs > 4 * DAG_MS) problemen.push('staat al dagen bezet');
-
-      const ernst = problemen.some((p) => p.startsWith('geen signaal') || p === 'uitgeschakeld')
-        ? 'critical'
-        : problemen.length
-          ? 'warning'
-          : 'good';
-
-      return {
-        id: t.id,
-        naam: t.naam,
-        type: t.type,
-        verdiepingNaam: t.verdiepingNaam,
-        wijk: t.wijk,
-        batterij: t.batterij,
-        batterijJaren: t.batterijJaren === null ? null : +t.batterijJaren.toFixed(1),
-        signaal: t.signaal,
-        laatsteSignaal: t.laatsteSignaal,
-        urenStil: stilMs === null ? null : +(stilMs / 3600000).toFixed(1),
-        dagenBezet: bezetSindsMs === null ? null : +(bezetSindsMs / DAG_MS).toFixed(1),
-        problemen,
-        ernst,
-      };
-    });
-
-  return {
-    opgehaald: info.opgehaald,
-    totaal: lijst.length,
-    cloudConnectors: info.toestellen.filter((t) => t.type === 'ccon').length,
-    inOrde: lijst.filter((s) => s.ernst === 'good').length,
-    aandacht: lijst.filter((s) => s.ernst === 'warning').length,
-    kritiek: lijst.filter((s) => s.ernst === 'critical').length,
-    // Eerst het meest dringende, en binnen dezelfde ernst het langst stille
-    // toestel bovenaan. Zo staat de lijst elke keer in dezelfde volgorde.
-    sensoren: lijst
-      .filter((s) => s.problemen.length)
-      .sort((a, b) => {
-        if (a.ernst !== b.ernst) return a.ernst === 'critical' ? -1 : 1;
-        if (b.problemen.length !== a.problemen.length) return b.problemen.length - a.problemen.length;
-        return (b.urenStil ?? Infinity) - (a.urenStil ?? Infinity);
-      }),
-  };
-}
-
 // ── Verversen ─────────────────────────────────────────────────────────────────
 
 let verversLoopt = false;
@@ -236,13 +129,7 @@ async function achtergrondVerversing() {
   }
 }
 
-// ── HTTP ──────────────────────────────────────────────────────────────────────
-
-function stuurJson(res, inhoud, status = 200) {
-  const body = JSON.stringify(inhoud);
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-  res.end(body);
-}
+// ── Statische bestanden ───────────────────────────────────────────────────────
 
 async function stuurBestand(res, pad) {
   try {
@@ -255,38 +142,80 @@ async function stuurBestand(res, pad) {
   }
 }
 
+async function leesLijf(req) {
+  const stukken = [];
+  for await (const s of req) stukken.push(s);
+  try {
+    return JSON.parse(Buffer.concat(stukken).toString() || '{}');
+  } catch {
+    return {};
+  }
+}
+
+// ── Verzoeken afhandelen ──────────────────────────────────────────────────────
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${POORT}`);
   const pad = url.pathname;
 
   try {
-    if (pad === '/api/nu') return stuurJson(res, await nu());
-    if (pad === '/api/sensoren') return stuurJson(res, await sensoren());
-
-    if (pad === '/api/analyse') {
-      const dagen = Math.min(120, Math.max(1, Number(url.searchParams.get('dagen') || 30)));
-      const startUur = Math.min(23, Math.max(0, Number(url.searchParams.get('startUur') || 8)));
-      const eindUur = Math.min(24, Math.max(startUur + 1, Number(url.searchParams.get('eindUur') || 17)));
-      const r = await analyse({ dagen, startUur, eindUur });
-      if (!r) return stuurJson(res, { fout: 'Er is nog geen historiek. Klik op Historiek verversen.' }, 404);
-      return stuurJson(res, r);
+    if (pad === '/api/aanmelden' && req.method === 'POST') {
+      if (!authActief()) return stuurJson(res, { ok: true, opmerking: 'Er is geen afscherming ingesteld.' });
+      const lijf = await leesLijf(req);
+      if (!controleerWachtwoord(lijf.wachtwoord)) {
+        await new Promise((r) => setTimeout(r, 700));
+        return stuurJson(res, { fout: 'Wachtwoord klopt niet' }, 401);
+      }
+      res.setHeader('Set-Cookie', maakKoekje());
+      return stuurJson(res, { ok: true });
     }
 
+    if (pad === '/api/afmelden') {
+      res.setHeader('Set-Cookie', wisKoekje());
+      return stuurJson(res, { ok: true });
+    }
+
+    // Status staat open, zodat het aanmeldscherm weet wat het moet tonen. Wie
+    // niet aangemeld is, krijgt daarom enkel dat en verder geen cijfers.
     if (pad === '/api/status') {
+      const binnen = aangemeld(req.headers.cookie);
+      const basis = { modus: 'lokaal', authActief: authActief(), aangemeld: binnen };
+      if (!binnen) return stuurJson(res, basis);
+
       const hist = await historiek();
       return stuurJson(res, {
+        ...basis,
         historiek: hist ? { opgehaald: hist.data.opgehaald, van: hist.data.van, tot: hist.data.tot } : null,
         verversLoopt,
         laatsteVerversing,
       });
     }
 
-    if (pad === '/api/ververs' && req.method === 'POST') {
-      const dagen = Math.min(180, Math.max(7, Number(url.searchParams.get('dagen') || 60)));
-      return stuurJson(res, await ververs(dagen));
+    if (pad.startsWith('/api/')) {
+      if (!bewaak(req, res)) return;
+
+      const info = await toestellen({ maxLeeftijdMs: 30 * 1000 });
+
+      if (pad === '/api/nu') return stuurJson(res, bouwNu(info.toestellen, info.opgehaald));
+      if (pad === '/api/sensoren') return stuurJson(res, bouwSensoren(info.toestellen, info.opgehaald));
+
+      if (pad === '/api/analyse') {
+        const dagen = Math.min(120, Math.max(1, Number(url.searchParams.get('dagen') || 30)));
+        const startUur = Math.min(23, Math.max(0, Number(url.searchParams.get('startUur') || 8)));
+        const eindUur = Math.min(24, Math.max(startUur + 1, Number(url.searchParams.get('eindUur') || 17)));
+        const r = await analyse({ dagen, startUur, eindUur });
+        if (!r) return stuurJson(res, { fout: 'Er is nog geen historiek. Klik op Historiek verversen.' }, 404);
+        return stuurJson(res, r);
+      }
+
+      if (pad === '/api/ververs' && req.method === 'POST') {
+        const dagen = Math.min(180, Math.max(7, Number(url.searchParams.get('dagen') || 60)));
+        return stuurJson(res, await ververs(dagen));
+      }
+
+      return stuurJson(res, { fout: 'Onbekend eindpunt' }, 404);
     }
 
-    // Statische bestanden
     const bestand = pad === '/' ? 'index.html' : normalize(pad).replace(/^[\\/]+/, '');
     if (bestand.includes('..')) {
       res.writeHead(400);
@@ -301,6 +230,7 @@ const server = createServer(async (req, res) => {
 
 server.listen(POORT, () => {
   console.log(`Werkplekdashboard draait op http://localhost:${POORT}`);
+  if (authActief()) console.log('Afscherming staat aan: er wordt een wachtwoord gevraagd.');
 
   const bewaard = bewaardeHistoriek();
   if (!bewaard) {

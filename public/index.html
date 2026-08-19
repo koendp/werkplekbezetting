@@ -15,6 +15,7 @@
     <span class="meta" id="kopmeta"></span>
   </div>
   <button class="knop" id="ververs">Historiek verversen</button>
+  <button class="knop" id="afmelden" hidden>Afmelden</button>
 </header>
 
 <nav role="tablist">
@@ -76,6 +77,21 @@
   <img class="logo kleur" src="logo-pov.png" alt="Provincie Oost-Vlaanderen">
   <img class="logo negatief" src="logo-pov-wit.png" alt="Provincie Oost-Vlaanderen">
 </footer>
+
+<div id="aanmelden" hidden>
+  <form id="aanmeldformulier">
+    <img class="logo kleur" src="logo-pov.png" alt="Provincie Oost-Vlaanderen">
+    <img class="logo negatief" src="logo-pov-wit.png" alt="Provincie Oost-Vlaanderen">
+    <div>
+      <h2>Bezetting werkplekken</h2>
+      <p>Deze pagina is afgeschermd. Vul het gedeelde wachtwoord in.</p>
+      <label for="wachtwoord">Wachtwoord</label>
+      <input type="password" id="wachtwoord" name="wachtwoord" autocomplete="current-password" required>
+      <p class="fout" id="aanmeldfout" role="alert" hidden></p>
+      <button class="knop" type="submit">Aanmelden</button>
+    </div>
+  </form>
+</div>
 
 <div id="tooltip" role="status" aria-live="polite"></div>
 

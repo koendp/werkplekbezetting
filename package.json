@@ -6,6 +6,10 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "refresh": "node src/refresh.js"
+    "refresh": "node src/refresh.js",
+    "snapshot": "node src/snapshot.js"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

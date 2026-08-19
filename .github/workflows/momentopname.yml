@@ -1,0 +1,69 @@
+name: Momentopname bijwerken
+
+# De analyse over tijd kan online niet live berekend worden: ze heeft 552
+# API-oproepen en ruim 25 MB historiek nodig. Deze taak rekent ze periodiek uit
+# en zet alleen het resultaat in de repository, waarna Vercel vanzelf opnieuw
+# publiceert.
+
+on:
+  schedule:
+    # Elke drie uur. Wil je het vaker, pas dit aan; een verversing kost enkele
+    # seconden zolang de historiek uit de cache komt.
+    - cron: '7 */3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: momentopname
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bijwerken:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # De ruwe historiek staat bewust niet in de repository. Ze wordt bewaard
+      # in de cache van Actions, zodat elke beurt enkel het nieuwe stuk hoeft op
+      # te halen. Zonder cache duurt een volledige ophaling ruim een minuut, wat
+      # ook werkt maar trager is.
+      - name: Historiek uit de cache halen
+        uses: actions/cache/restore@v4
+        with:
+          path: data/historiek.json
+          key: historiek-${{ github.run_id }}
+          restore-keys: |
+            historiek-
+
+      - name: Momentopname berekenen
+        env:
+          DT_KEY_ID: ${{ secrets.DT_KEY_ID }}
+          DT_SECRET: ${{ secrets.DT_SECRET }}
+          DT_SERVICE_ACCOUNT_EMAIL: ${{ secrets.DT_SERVICE_ACCOUNT_EMAIL }}
+          DT_PROJECT_ID: ${{ secrets.DT_PROJECT_ID }}
+        run: node --max-old-space-size=3072 src/snapshot.js
+
+      - name: Historiek in de cache bewaren
+        uses: actions/cache/save@v4
+        with:
+          path: data/historiek.json
+          key: historiek-${{ github.run_id }}
+
+      - name: Wegschrijven als er iets veranderd is
+        run: |
+          if git diff --quiet -- data/momentopname.js; then
+            echo "Niets veranderd, geen commit nodig."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/momentopname.js
+          git commit -m "Momentopname bijgewerkt"
+          git push

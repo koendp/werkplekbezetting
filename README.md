@@ -96,6 +96,60 @@ tijdzone Brussel.
   2 tot 3 "bezette" plekken in het weekend. Het tabblad Sensoren zet ze op een
   rij onder "staat al dagen bezet".
 
+## Online versie
+
+Naast de lokale server draait het dashboard ook op Vercel. Dat werkt anders,
+omdat een functie daar niet lang mag draaien en niets naar schijf kan schrijven.
+
+| Onderdeel | Lokaal | Online |
+|---|---|---|
+| Nu en Sensoren | via de lokale kopie van de toestellenlijst | rechtstreeks bij de API, per oproep |
+| Bezetting over tijd | live berekend uit de volledige historiek | vooraf berekende momentopname |
+| Periodes | 7, 30 en 60 dagen | dezelfde drie |
+| Kantooruren | vrij instelbaar | vast op 8 tot 17 uur |
+| Historiek verversen | knop in het dashboard, elk kwartier automatisch | geplande taak op GitHub, elke drie uur |
+
+De analyse kan online niet live berekend worden: ze heeft 552 API-oproepen en
+ruim 25 MB historiek nodig. Daarom rekent de taak in
+`.github/workflows/momentopname.yml` de uitkomst periodiek uit en zet ze in
+`data/momentopname.js` (ongeveer 560 kB). Vercel publiceert daarna vanzelf
+opnieuw. De ruwe historiek blijft buiten de repository en wordt bewaard in de
+cache van GitHub Actions, zodat elke beurt enkel het nieuwe stuk hoeft op te
+halen.
+
+### Afscherming
+
+De online versie vraagt één gedeeld wachtwoord. Na een geslaagde aanmelding
+krijgt de browser een koekje met een vervaltijd en een handtekening; het
+wachtwoord zelf gaat niet mee terug. Alle gegevens lopen via `/api/`, en die
+eindpunten geven zonder geldig koekje een 401 terug. De statische pagina zelf is
+wel gewoon bereikbaar, maar bevat geen cijfers.
+
+**Wat dit niet is:** dit zijn geen persoonlijke accounts, er is geen logging van
+wie wat bekijkt, en een gedeeld wachtwoord lekt in de praktijk. Voor een
+dashboard met aanwezigheidsgegevens over herkenbare collega's is dat op termijn
+te mager. Overleg met IT of de functionaris gegevensbescherming voor je de link
+breder verspreidt.
+
+### Instellen
+
+Op Vercel, bij Settings en dan Environment Variables:
+
+| Variabele | Waarde |
+|---|---|
+| `DT_KEY_ID` | uit Disruptive Studio |
+| `DT_SECRET` | uit Disruptive Studio |
+| `DT_PROJECT_ID` | uit Disruptive Studio |
+| `AUTH_WACHTWOORD` | het gedeelde wachtwoord dat je zelf kiest |
+| `SESSIE_GEHEIM` | optioneel, een lange willekeurige tekst om koekjes mee te tekenen |
+
+Zonder `AUTH_WACHTWOORD` staat de afscherming uit en is alles publiek. Zonder
+`SESSIE_GEHEIM` wordt de handtekeningsleutel van het wachtwoord afgeleid, wat
+ook werkt; verander je het wachtwoord, dan vervallen alle lopende sessies.
+
+Op GitHub, bij Settings, Secrets and variables, Actions, dezelfde vier
+`DT_`-waarden als repository secrets. Die heeft de geplande taak nodig.
+
 ## Huisstijl
 
 Het dashboard volgt de primaire huisstijl van Provincie Oost-Vlaanderen: oranje

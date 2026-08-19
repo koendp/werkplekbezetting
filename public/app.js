@@ -29,6 +29,32 @@ function geleden(iso) {
   return `${Math.round(min / 1440)} dagen`;
 }
 
+/* ── Aanmelden ───────────────────────────────────────────────────────────── */
+
+/**
+ * Alle gegevens lopen via deze functie. Antwoordt de server met 401, dan is de
+ * sessie verlopen of nog niet gestart en verschijnt het aanmeldscherm.
+ */
+async function haal(url, opties) {
+  const res = await fetch(url, opties);
+  if (res.status === 401) {
+    toonAanmelden();
+    const err = new Error('Niet aangemeld');
+    err.aanmeldenNodig = true;
+    throw err;
+  }
+  return res;
+}
+
+const negeerAanmelding = (err) => { if (!err.aanmeldenNodig) throw err; };
+
+function toonAanmelden() {
+  const scherm = $('#aanmelden');
+  if (!scherm.hidden) return;
+  scherm.hidden = false;
+  $('#wachtwoord').focus();
+}
+
 /* ── Tooltip ─────────────────────────────────────────────────────────────── */
 
 const tooltip = $('#tooltip');
@@ -274,7 +300,7 @@ $$('nav button').forEach((knop) => {
     $$('main section').forEach((s) => { s.hidden = s.id !== `tab-${knop.dataset.tab}`; });
 
     const tab = knop.dataset.tab;
-    if (!geladen.has(tab)) laders[tab]();
+    if (!geladen.has(tab)) laders[tab]().catch(negeerAanmelding);
     else if (tab !== 'analyse') stilBijwerken(tab, laders[tab]);
   });
 });
@@ -295,7 +321,7 @@ async function laadAnalyse({ stil = false } = {}) {
   const [start, eind] = $('#f-uren').value.split('-').map(Number);
   const url = `/api/analyse?dagen=${$('#f-dagen').value}&startUur=${start}&eindUur=${eind}`;
 
-  const res = await fetch(url);
+  const res = await haal(url);
   const data = await res.json();
 
   if (!res.ok) {
@@ -541,7 +567,7 @@ function vulWerkplekTabel() {
 }
 
 laders.analyse = laadAnalyse;
-['#f-dagen', '#f-uren'].forEach((s) => $(s).addEventListener('change', laadAnalyse));
+['#f-dagen', '#f-uren'].forEach((s) => $(s).addEventListener('change', () => laadAnalyse().catch(negeerAanmelding)));
 $('#f-groep').addEventListener('change', () => analyseData && toonAnalyse());
 
 /* ── Tabblad: nu ─────────────────────────────────────────────────────────── */
@@ -555,7 +581,7 @@ async function laadNu({ stil = false } = {}) {
     houder.textContent = 'Bezig met laden...';
   }
 
-  const d = await (await fetch('/api/nu')).json();
+  const d = await (await haal('/api/nu')).json();
   geladen.add('nu');
   houder.className = '';
 
@@ -707,7 +733,7 @@ async function laadSensoren({ stil = false } = {}) {
     houder.textContent = 'Bezig met laden...';
   }
 
-  const d = await (await fetch('/api/sensoren')).json();
+  const d = await (await haal('/api/sensoren')).json();
   geladen.add('sensoren');
   houder.className = '';
 
@@ -798,7 +824,7 @@ setInterval(() => stilBijwerken('sensoren', laadSensoren), SENSOREN_MS);
 setInterval(async () => {
   if (!zichtbaar('analyse') || bezigIn('analyse') || !analyseData) return;
   try {
-    const status = await (await fetch('/api/status')).json();
+    const status = await (await haal('/api/status')).json();
     if (status.historiek && status.historiek.opgehaald !== analyseData.opgehaald) {
       await laadAnalyse({ stil: true });
     }
@@ -821,7 +847,7 @@ $('#ververs').addEventListener('click', async () => {
   knop.disabled = true;
   knop.textContent = 'Bezig met ophalen...';
   try {
-    await fetch('/api/ververs?dagen=60', { method: 'POST' });
+    await haal('/api/ververs?dagen=60', { method: 'POST' });
     geladen.clear();
     await laadAnalyse();
   } finally {
@@ -830,4 +856,90 @@ $('#ververs').addEventListener('click', async () => {
   }
 });
 
-laadAnalyse();
+/* ── Opstarten ───────────────────────────────────────────────────────────── */
+
+/**
+ * Online wordt de analyse niet live berekend maar periodiek klaargezet, dus
+ * daar zijn alleen de vooraf berekende periodes en kantooruren beschikbaar.
+ */
+function pasModusToe(status) {
+  $('#afmelden').hidden = !(status.authActief && status.aangemeld);
+
+  if (status.modus !== 'online') return;
+
+  $('#ververs').hidden = true;
+
+  // Welke periodes klaarstaan weten we pas na de aanmelding.
+  if (!status.periodes) return;
+
+  const beschikbaar = new Set(status.periodes.map(String));
+  [...$('#f-dagen').options].forEach((o) => { if (!beschikbaar.has(o.value)) o.remove(); });
+
+  const uren = $('#f-uren');
+  const vast = `${status.startUur}-${status.eindUur}`;
+  [...uren.options].forEach((o) => { if (o.value !== vast) o.remove(); });
+  uren.value = vast;
+  uren.disabled = true;
+  uren.title = 'Online staan de kantooruren vast, omdat de cijfers vooraf berekend worden.';
+}
+
+$('#aanmeldformulier').addEventListener('submit', async (evt) => {
+  evt.preventDefault();
+  const knop = evt.target.querySelector('button');
+  const fout = $('#aanmeldfout');
+  knop.disabled = true;
+  fout.hidden = true;
+
+  try {
+    const res = await fetch('/api/aanmelden', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wachtwoord: $('#wachtwoord').value }),
+    });
+    if (!res.ok) {
+      fout.textContent = 'Dat wachtwoord klopt niet.';
+      fout.hidden = false;
+      $('#wachtwoord').select();
+      return;
+    }
+    $('#wachtwoord').value = '';
+    $('#aanmelden').hidden = true;
+    geladen.clear();
+    await start();
+  } catch {
+    fout.textContent = 'De server antwoordde niet. Probeer opnieuw.';
+    fout.hidden = false;
+  } finally {
+    knop.disabled = false;
+  }
+});
+
+$('#afmelden').addEventListener('click', async () => {
+  await fetch('/api/afmelden');
+  geladen.clear();
+  toonAanmelden();
+});
+
+async function start() {
+  let status = { modus: 'lokaal', authActief: false, aangemeld: true };
+  try {
+    status = await (await fetch('/api/status')).json();
+  } catch {
+    // Geen antwoord: dan proberen we gewoon te laden en zien we de fout daar.
+  }
+
+  pasModusToe(status);
+
+  if (status.authActief && !status.aangemeld) {
+    toonAanmelden();
+    return;
+  }
+
+  try {
+    await laadAnalyse();
+  } catch (err) {
+    if (!err.aanmeldenNodig) throw err;
+  }
+}
+
+start();

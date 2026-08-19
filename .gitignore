@@ -1,3 +1,6 @@
 .env
-data/
 node_modules/
+
+# De ruwe historiek blijft lokaal; alleen de berekende momentopname wordt gepubliceerd.
+data/*
+!data/momentopname.js
