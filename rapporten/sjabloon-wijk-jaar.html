@@ -207,6 +207,7 @@
   .legende span { display: inline-flex; align-items: center; gap: 7px; }
   .legende i { width: 11px; height: 11px; border-radius: 2px; flex: 0 0 auto; }
   .legende i.lijn { width: 15px; height: 3px; border-radius: 1.5px; }
+  .legende i.stippel { width: 15px; height: 0; border-radius: 0; border-top: 2px dashed var(--as); }
 
   /* ── Voetnoten ───────────────────────────────────────────────────────── */
 
@@ -345,6 +346,7 @@
         <div class="legende">
           <span><i style="background:var(--oranje)"></i>gemiddeld bezet</span>
           <span><i class="lijn" style="background:var(--neutraal)"></i>drukste moment van de dag</span>
+          <span><i class="stippel"></i>alle 41 plekken</span>
         </div>
         <div id="g-weekdag"></div>
       </div>
@@ -354,6 +356,7 @@
         <div class="legende">
           <span><i style="background:var(--oranje)"></i>gemiddeld per dag</span>
           <span><i class="lijn" style="background:var(--neutraal)"></i>hoogste van het jaar</span>
+          <span><i class="stippel"></i>alle 41 plekken</span>
         </div>
         <div id="g-gebruikt"></div>
       </div>
@@ -532,6 +535,22 @@
     const uit = [];
     for (let v = 0; v <= max + stap * 0.001; v += stap) uit.push(+v.toFixed(6));
     if (uit[uit.length - 1] < max) uit.push(uit[uit.length - 1] + stap);
+    return uit;
+  }
+
+  /**
+   * Schaalstappen voor een as met een vast plafond, bijvoorbeeld het aantal
+   * werkplekken. Kiest de stap die het dichtst bij het streefaantal ligt, zodat
+   * de as niet verder loopt dan wat er mogelijk is.
+   */
+  function stappenTot(plafond, doel = 4) {
+    const ruw = plafond / doel;
+    const macht = 10 ** Math.floor(Math.log10(ruw));
+    const stap = [1, 2, 2.5, 5, 10]
+      .map((m) => m * macht)
+      .reduce((beste, k) => (Math.abs(k - ruw) < Math.abs(beste - ruw) ? k : beste));
+    const uit = [];
+    for (let v = 0; v <= plafond + 1e-9; v += stap) uit.push(+v.toFixed(6));
     return uit;
   }
 
@@ -722,22 +741,28 @@
   function weekdagStaven(el, haalWaarde, haalTweede, haalOnderschrift, aria) {
     const s = DATA[bereik];
     const b = Math.max(280, el.clientWidth);
-    const h = 230;
-    const m = { l: 34, r: 10, t: 18, o: 34 };
+    const h = 240;
+    // Ruimte bovenaan voor de lijn op "alle plekken" en de waardelabels.
+    const m = { l: 34, r: 10, t: 30, o: 34 };
     const bb = b - m.l - m.r;
     const bh = h - m.t - m.o;
 
     const waarden = s.perWeekdag.map(haalWaarde);
     const tweedes = s.perWeekdag.map(haalTweede);
-    const stappen = asStappen(Math.max(...waarden, ...tweedes, 1));
-    const maxY = stappen[stappen.length - 1];
-    const y = (v) => m.t + bh - (v / maxY) * bh;
+
+    // Beide grafieken tellen werkplekken, dus de as stopt bij het aantal
+    // plekken. Zo lopen ze niet door tot boven wat mogelijk is, en zijn ze
+    // onderling te vergelijken.
+    const maxY = DATA.aantalPlekken;
+    const stappen = stappenTot(maxY);
+    const y = (v) => m.t + bh - (Math.min(v, maxY) / maxY) * bh;
     const vak = bb / 5;
     const breedte = Math.min(52, vak - 10);
 
     el.innerHTML = `<svg viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" role="img" aria-label="${aria}">
       ${stappen.map((v) => `<line class="raster" x1="${m.l}" x2="${b - m.r}" y1="${y(v)}" y2="${y(v)}"></line>
         <text x="${m.l - 7}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('')}
+      <line class="feest" x1="${m.l}" x2="${b - m.r}" y1="${y(maxY)}" y2="${y(maxY)}"></line>
       ${s.perWeekdag.map((w, i) => {
         const px = m.l + i * vak + (vak - breedte) / 2;
         const v = waarden[i];
@@ -866,8 +891,10 @@
     // ── Teksten bij de weekdaggrafieken
     const rustigste = [...s.perWeekdag].sort((a, b) => a.gemiddeld - b.gemiddeld)[0];
     const drukste = [...s.perWeekdag].sort((a, b) => b.gemiddeld - a.gemiddeld)[0];
+    const hoofdletter = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+
     $('#weekdag-uitleg').textContent =
-      `Over ${BEREIKNAAM[bereik]}. ${DAGNAMEN[drukste.weekdag]} is de drukste dag met gemiddeld ` +
+      `Over ${BEREIKNAAM[bereik]}. ${hoofdletter(DAGNAMEN[drukste.weekdag])} is de drukste dag met gemiddeld ` +
       `${nl(drukste.gemiddeld)} bezette plekken, ${DAGNAMEN[rustigste.weekdag]} de rustigste met ${nl(rustigste.gemiddeld)}.`;
 
     const meesteVolledig = [...s.perWeekdag].sort((a, b) => b.volledigeDagen - a.volledigeDagen)[0];
