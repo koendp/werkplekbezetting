@@ -141,8 +141,13 @@ const isZomer = (datum) => ZOMERMAANDEN.includes(maandVan(datum));
 function vatSamen(dagen, aantalPlekken) {
   const gem = dagen.map((d) => d.gemiddeld);
   const piek = dagen.map((d) => d.piek);
+  const gebruikt = dagen.map((d) => d.gebruikt);
   return {
     werkdagen: dagen.length,
+    gebruiktGemiddeld: +gemiddelde(gebruikt).toFixed(1),
+    gebruiktHoogste: Math.max(...gebruikt, 0),
+    gebruiktLaagste: gebruikt.length ? Math.min(...gebruikt) : 0,
+    volledigeDagen: gebruikt.filter((g) => g >= aantalPlekken).length,
     gemiddeld: +gemiddelde(gem).toFixed(2),
     gemiddeldeGraad: +(gemiddelde(gem) / aantalPlekken).toFixed(4),
     mediaan: +percentiel(gem, 50).toFixed(2),
@@ -157,30 +162,93 @@ function vatSamen(dagen, aantalPlekken) {
 
 /** Gemiddelde per weekdag en per uur, afgeleid uit het dagverloop. */
 function profielen(dagen, aantalPlekken) {
-  const perWeekdag = Array.from({ length: 5 }, () => ({ gem: [], piek: [] }));
+  const perWeekdag = Array.from({ length: 5 }, () => ({ gem: [], piek: [], gebruikt: [], piekUren: [] }));
   const perUur = Array.from({ length: 24 }, () => []);
+  const perWeekdagUur = Array.from({ length: 5 }, () => Array.from({ length: 24 }, () => []));
 
   for (const d of dagen) {
-    perWeekdag[d.weekdag].gem.push(d.gemiddeld);
-    perWeekdag[d.weekdag].piek.push(d.piek);
+    const w = perWeekdag[d.weekdag];
+    w.gem.push(d.gemiddeld);
+    w.piek.push(d.piek);
+    w.gebruikt.push(d.gebruikt);
+    w.piekUren.push(d.piekUur);
     for (let u = 0; u < 24; u++) {
-      perUur[u].push(gemiddelde(d.verloop.slice(u * 4, u * 4 + 4)));
+      const uurgemiddelde = gemiddelde(d.verloop.slice(u * 4, u * 4 + 4));
+      perUur[u].push(uurgemiddelde);
+      perWeekdagUur[d.weekdag][u].push(uurgemiddelde);
     }
   }
+
+  /** Het uur dat het vaakst het drukste uur van de dag was. */
+  const vaakstePiekuur = (uren) => {
+    if (!uren.length) return null;
+    const tel = new Map();
+    for (const u of uren) tel.set(u, (tel.get(u) ?? 0) + 1);
+    return [...tel].sort((a, b) => b[1] - a[1])[0][0];
+  };
 
   return {
     perWeekdag: perWeekdag.map((w, i) => ({
       weekdag: i,
+      dagen: w.gem.length,
       gemiddeld: +gemiddelde(w.gem).toFixed(2),
       graad: +(gemiddelde(w.gem) / aantalPlekken).toFixed(4),
       piek: +gemiddelde(w.piek).toFixed(2),
-      dagen: w.gem.length,
+      piekHoogste: +Math.max(...w.piek, 0).toFixed(2),
+      // Verschillende plekken die in de loop van de dag gebruikt werden.
+      gebruiktGemiddeld: +gemiddelde(w.gebruikt).toFixed(1),
+      gebruiktHoogste: Math.max(...w.gebruikt, 0),
+      gebruiktLaagste: w.gebruikt.length ? Math.min(...w.gebruikt) : 0,
+      volledigeDagen: w.gebruikt.filter((g) => g >= aantalPlekken).length,
+      druksteUur: vaakstePiekuur(w.piekUren),
     })),
     perUur: perUur.map((v) => +gemiddelde(v).toFixed(2)),
+    perWeekdagUur: perWeekdagUur.map((rij) => rij.map((v) => +gemiddelde(v).toFixed(2))),
   };
 }
 
 const aantalPlekken = werkplekken.length;
+
+/**
+ * Per dag: welke werkplekken waren er die dag in gebruik?
+ *
+ * Dit is iets anders dan de piek. De piek telt hoeveel plekken op hetzelfde
+ * moment bezet waren; dit telt hoeveel verschillende plekken er in de loop van
+ * de dag aan bod kwamen. Een plek telt mee vanaf een kwartier gebruik, dezelfde
+ * drempel die ook voor "dagen gebruikt" per werkplek geldt.
+ */
+const BINS_PER_DAG = 96;
+const DREMPEL = 0.5; // een halve blok van een kwartier
+
+const gebruikPerDag = r.dagen.map(() => 0);
+const gebruikPerWerkplek = r.perWerkplek.map(() => Array.from({ length: 7 }, () => 0));
+
+r.perWerkplek.forEach((wp, wi) => {
+  for (let d = 0; d < r.dagen.length; d++) {
+    let som = 0;
+    for (let b = 0; b < BINS_PER_DAG; b++) som += wp.bins[d * BINS_PER_DAG + b];
+    if (som > DREMPEL) {
+      gebruikPerDag[d]++;
+      gebruikPerWerkplek[wi][r.dagen[d].weekdag]++;
+    }
+  }
+});
+
+/** Het uur waarop de bezetting die dag het hoogst lag. */
+const piekUurPerDag = r.perDag.map((d) => {
+  let beste = 0;
+  let max = -1;
+  for (let b = 0; b < d.verloop.length; b++) {
+    if (d.verloop[b] > max) { max = d.verloop[b]; beste = b; }
+  }
+  return Math.floor(beste / 4);
+});
+
+r.perDag.forEach((d, i) => {
+  d.gebruikt = gebruikPerDag[i];
+  d.piekUur = piekUurPerDag[i];
+});
+
 const werkdagen = r.perDag.filter((d) => d.werkdag);
 const zonderZomer = werkdagen.filter((d) => !isZomer(d.datum));
 const alleenZomer = werkdagen.filter((d) => isZomer(d.datum));
@@ -235,9 +303,18 @@ const uitkomst = {
     gemiddeld: d.gemiddeld,
     graad: d.bezettingsgraad,
     piek: d.piek,
+    gebruikt: d.gebruikt,
+    piekUur: d.piekUur,
   })),
 
-  perWerkplek: r.perWerkplek.map(({ bins, ...rest }) => rest),
+  perWerkplek: r.perWerkplek.map(({ bins, ...rest }, i) => ({
+    ...rest,
+    // Op hoeveel maandagen, dinsdagen enzovoort was deze plek in gebruik.
+    perWeekdag: gebruikPerWerkplek[i].slice(0, 5),
+  })),
+
+  // Hoeveel maandagen, dinsdagen enzovoort telt de periode, als noemer.
+  werkdagenPerWeekdag: Array.from({ length: 5 }, (_, w) => werkdagen.filter((d) => d.weekdag === w).length),
 };
 
 writeFileSync(uitPad, JSON.stringify(uitkomst));
@@ -266,9 +343,19 @@ for (const [naam, s] of [
 }
 
 console.log('per weekdag (zonder juli en augustus):');
+console.log('              gemiddeld   graad   piek   verschillende plekken   alle 41');
 uitkomst.zonderZomer.perWeekdag.forEach((w, i) => {
-  console.log(`  ${DAGKORT[i].padEnd(10)} ${String(w.gemiddeld).padStart(6)}  ${pct(w.graad).padStart(6)}  (${w.dagen} dagen)`);
+  console.log(
+    `  ${DAGKORT[i].padEnd(10)} ${String(w.gemiddeld).padStart(7)} ${pct(w.graad).padStart(7)}` +
+    ` ${String(w.piek).padStart(6)}   gem ${String(w.gebruiktGemiddeld).padStart(4)}, hoogste ${String(w.gebruiktHoogste).padStart(2)}` +
+    `   ${w.volledigeDagen} van ${w.dagen} dagen`,
+  );
 });
+
+console.log('\nverschillende plekken gebruikt op één dag:');
+for (const [naam, s] of [['heel jaar', uitkomst.heelJaar], ['zonder juli en augustus', uitkomst.zonderZomer]]) {
+  console.log(`  ${naam.padEnd(24)} gemiddeld ${s.gebruiktGemiddeld}, laagste ${s.gebruiktLaagste}, hoogste ${s.gebruiktHoogste}, alle ${aantalPlekken} op ${s.volledigeDagen} dagen`);
+}
 
 console.log('\nper maand:');
 for (const m of uitkomst.perMaand) {

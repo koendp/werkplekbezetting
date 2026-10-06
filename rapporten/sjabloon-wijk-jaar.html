@@ -17,6 +17,15 @@
     --oranje-diep: #985102;
     --neutraal: #565555;
 
+    /* Tinten van het huisstijloranje, voor de weekdagmatrix. */
+    --seq-1: #fbf3eb;
+    --seq-2: #f2dfc4;
+    --seq-3: #e5b886;
+    --seq-4: #d08128;
+    --seq-5: #985102;
+    --seq-ink-1: #565555;
+    --seq-ink-5: #ffffff;
+
     --font: 'Meta Pro', 'Aptos', system-ui, -apple-system, 'Segoe UI', sans-serif;
   }
 
@@ -32,6 +41,13 @@
       --as: #3b3937;
       --rand: rgba(242, 240, 236, 0.14);
       --neutraal: #e1dfda;
+      --seq-1: #2a2119;
+      --seq-2: #4e3414;
+      --seq-3: #7a470c;
+      --seq-4: #ae5f05;
+      --seq-5: #d69144;
+      --seq-ink-1: #c3c0b9;
+      --seq-ink-5: #1a1a19;
     }
   }
 
@@ -46,6 +62,13 @@
     --as: #3b3937;
     --rand: rgba(242, 240, 236, 0.14);
     --neutraal: #e1dfda;
+    --seq-1: #2a2119;
+    --seq-2: #4e3414;
+    --seq-3: #7a470c;
+    --seq-4: #ae5f05;
+    --seq-5: #d69144;
+    --seq-ink-1: #c3c0b9;
+    --seq-ink-5: #1a1a19;
   }
 
   * { box-sizing: border-box; }
@@ -97,6 +120,19 @@
   .kaarten { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
   .kaarten > * { min-width: 0; }
 
+  .tegels { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin-bottom: 14px; }
+  .tegel {
+    background: var(--surface);
+    border: 1px solid var(--rand);
+    border-top: 3px solid var(--oranje);
+    border-radius: 8px;
+    padding: 14px 16px;
+    min-width: 0;
+  }
+  .tegel .titel { font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
+  .tegel .waarde { font-size: 30px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tegel .bij { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+
   /* ── Antwoordblok ────────────────────────────────────────────────────── */
 
   .antwoord {
@@ -127,6 +163,10 @@
 
   .balk { height: 8px; border-radius: 2px; background: var(--raster); min-width: 90px; overflow: hidden; }
   .balk > i { display: block; height: 100%; background: var(--oranje); border-radius: 2px; }
+
+  /* Weekdagmatrix: het cijfer staat er altijd bij, kleur alleen als hulp. */
+  td.cel { text-align: right; font-variant-numeric: tabular-nums; padding-right: 6px; }
+  td.cel span { display: block; border-radius: 3px; padding: 2px 6px; }
 
   /* ── Bedieningselementen ─────────────────────────────────────────────── */
 
@@ -205,6 +245,7 @@
         <span class="graad" id="hoofdgraad"></span>
       </div>
       <p id="hoofdtekst"></p>
+      <p id="hoofdtekst-plekken" style="border-top:1px solid var(--rand); padding-top:12px; margin-top:14px"></p>
     </div>
   </section>
 
@@ -264,8 +305,13 @@
   <!-- ── Weekdag en uur ────────────────────────────────────────────────── -->
 
   <section>
-    <h2>Patroon binnen de week en de dag</h2>
-    <p class="uitleg">Kies welke periode je wil bekijken. Beide grafieken volgen die keuze.</p>
+    <h2>Patroon binnen de week</h2>
+    <p class="uitleg">
+      Twee verschillende vragen staan hier naast elkaar. <strong>Gelijktijdig bezet</strong> zegt
+      hoeveel volk er tegelijk zit. <strong>Verschillende plekken gebruikt</strong> telt hoeveel
+      van de 41 bureaus in de loop van die dag aan bod kwamen, ook als dat niet op hetzelfde
+      moment was.
+    </p>
 
     <div class="keuze" id="keuze" role="group" aria-label="Periode kiezen">
       <button type="button" data-bereik="zonderZomer" aria-pressed="true">Zonder juli en augustus</button>
@@ -273,17 +319,96 @@
       <button type="button" data-bereik="alleenZomer" aria-pressed="false">Enkel juli en augustus</button>
     </div>
 
+    <div class="kaart hoes" style="margin-bottom:14px">
+      <table id="weekdagtabel">
+        <caption id="weekdagtabel-caption"></caption>
+        <thead>
+          <tr>
+            <th>Weekdag</th>
+            <th class="getal">Dagen</th>
+            <th class="getal">Gemiddeld bezet</th>
+            <th class="getal">Drukste moment</th>
+            <th class="getal">Verschillende plekken</th>
+            <th class="getal">Hoogste</th>
+            <th class="getal">Alle 41 gebruikt</th>
+            <th class="getal">Drukste uur</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
     <div class="kaarten">
       <div class="kaart">
-        <h2 style="font-size:15px">Per weekdag</h2>
+        <h2 style="font-size:15px">Gelijktijdig bezet, per weekdag</h2>
         <p class="uitleg" id="weekdag-uitleg"></p>
+        <div class="legende">
+          <span><i style="background:var(--oranje)"></i>gemiddeld bezet</span>
+          <span><i class="lijn" style="background:var(--neutraal)"></i>drukste moment van de dag</span>
+        </div>
         <div id="g-weekdag"></div>
       </div>
+      <div class="kaart">
+        <h2 style="font-size:15px">Verschillende plekken gebruikt, per weekdag</h2>
+        <p class="uitleg" id="gebruikt-uitleg"></p>
+        <div class="legende">
+          <span><i style="background:var(--oranje)"></i>gemiddeld per dag</span>
+          <span><i class="lijn" style="background:var(--neutraal)"></i>hoogste van het jaar</span>
+        </div>
+        <div id="g-gebruikt"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Inzoomen op een weekdag ───────────────────────────────────────── -->
+
+  <section>
+    <h2>Inzoomen op één weekdag</h2>
+    <p class="uitleg">
+      Kies een weekdag om te zien hoe die dag er doorgaans uitziet en om elke afzonderlijke dag
+      na te kijken. De periodekeuze hierboven telt ook hier mee.
+    </p>
+
+    <div class="keuze" id="dagkeuze" role="group" aria-label="Weekdag kiezen">
+      <button type="button" data-dag="alle" aria-pressed="true">Alle werkdagen</button>
+      <button type="button" data-dag="0" aria-pressed="false">Maandag</button>
+      <button type="button" data-dag="1" aria-pressed="false">Dinsdag</button>
+      <button type="button" data-dag="2" aria-pressed="false">Woensdag</button>
+      <button type="button" data-dag="3" aria-pressed="false">Donderdag</button>
+      <button type="button" data-dag="4" aria-pressed="false">Vrijdag</button>
+    </div>
+
+    <div class="tegels" id="zoomtegels"></div>
+
+    <div class="kaarten">
       <div class="kaart">
         <h2 style="font-size:15px">Verloop over de dag</h2>
         <p class="uitleg" id="uur-uitleg"></p>
         <div id="g-uur"></div>
       </div>
+      <div class="kaart">
+        <h2 style="font-size:15px">Hoeveel plekken kwamen er aan bod</h2>
+        <p class="uitleg" id="verdeling-uitleg"></p>
+        <div id="g-verdeling"></div>
+      </div>
+    </div>
+
+    <div class="kaart hoes" style="margin-top:14px">
+      <table id="dagtabel">
+        <caption id="dagtabel-caption"></caption>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Dag</th>
+            <th class="getal">Gemiddeld bezet</th>
+            <th class="getal">Drukste moment</th>
+            <th class="getal">Drukste uur</th>
+            <th class="getal">Verschillende plekken</th>
+            <th>Bijzonderheid</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </section>
 
@@ -292,23 +417,34 @@
   <section>
     <h2>Per werkplek over het hele jaar</h2>
     <p class="uitleg">
-      Hoeveel procent van de kantooruren elke werkplek bezet was, en op hoeveel van de 261
-      werkdagen hij minstens een keer gebruikt werd.
+      Hoeveel procent van de kantooruren elke werkplek bezet was, en op welk deel van de
+      maandagen, dinsdagen enzovoort hij in gebruik was. Zo zie je of een bepaalde plek op een
+      vaste dag van de week stil blijft.
     </p>
+    <div class="legende">
+      <span><i style="background:var(--seq-7, var(--oranje))"></i>vaak in gebruik op die weekdag</span>
+      <span><i style="background:var(--seq-2, var(--raster))"></i>zelden</span>
+    </div>
     <div class="kaart hoes">
       <table id="werkplekken">
         <thead>
           <tr>
             <th>Werkplek</th>
             <th class="getal">Bezetting</th>
-            <th style="width:30%">&nbsp;</th>
+            <th style="min-width:110px">&nbsp;</th>
             <th class="getal">Dagen gebruikt</th>
+            <th class="getal" title="maandag">ma</th>
+            <th class="getal" title="dinsdag">di</th>
+            <th class="getal" title="woensdag">wo</th>
+            <th class="getal" title="donderdag">do</th>
+            <th class="getal" title="vrijdag">vr</th>
             <th class="getal">Uren bezet</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
+    <p class="melding" id="werkplek-noot"></p>
   </section>
 
   <!-- ── Verantwoording ────────────────────────────────────────────────── -->
@@ -427,6 +563,15 @@
     `Het drukste moment van het jaar telde ${nl(DATA.heelJaar.piekHoogste)} bezette plekken, ` +
     `${pct(DATA.heelJaar.piekGraad)} van de wijk.`;
 
+  const hj = DATA.heelJaar;
+  $('#hoofdtekst-plekken').textContent =
+    `Kwamen alle plekken aan bod? Over het jaar wel: elk van de ${DATA.aantalPlekken} bureaus werd ` +
+    `gebruikt. Op één enkele dag kwamen er gemiddeld ${nl(hj.gebruiktGemiddeld)} verschillende plekken ` +
+    `aan bod. Alle ${DATA.aantalPlekken} tegelijk op dezelfde dag gebeurde op ${hj.volledigeDagen} van ` +
+    `de ${hj.werkdagen} werkdagen, oftewel ${pct(hj.volledigeDagen / hj.werkdagen)}. ` +
+    `Let op het verschil met de bezetting hierboven: dat telt hoeveel plekken op hetzelfde moment ` +
+    `bezet zijn, dit telt hoeveel verschillende plekken er in de loop van de dag gebruikt werden.`;
+
   /* ── Vergelijkingstabel ────────────────────────────────────────────── */
 
   const rijen = [
@@ -544,16 +689,37 @@
     </svg>`;
   });
 
-  /* ── Grafieken die de periodekeuze volgen ──────────────────────────── */
+  /* ── Keuzes: periode en weekdag ────────────────────────────────────── */
 
   let bereik = 'zonderZomer';
+  let weekdag = 'alle';
+
   const BEREIKNAAM = {
     zonderZomer: 'alle werkdagen buiten juli en augustus',
     heelJaar: 'alle werkdagen van het jaar',
     alleenZomer: 'de werkdagen in juli en augustus',
   };
 
-  function tekenWeekdag(el) {
+  const hoortBij = (d) =>
+    d.werkdag &&
+    (bereik === 'heelJaar' || (bereik === 'zonderZomer' ? !d.zomer : d.zomer)) &&
+    (weekdag === 'alle' || d.weekdag === Number(weekdag));
+
+  const gekozenDagen = () => DATA.perDag.filter(hoortBij);
+
+  const PERIODESTAART = {
+    zonderZomer: 'buiten juli en augustus',
+    heelJaar: 'van het jaar',
+    alleenZomer: 'in juli en augustus',
+  };
+
+  /** Bijvoorbeeld "alle werkdagen buiten juli en augustus" of "vrijdagen in juli en augustus". */
+  const selectieLabel = () => (weekdag === 'alle'
+    ? BEREIKNAAM[bereik]
+    : `${DAGNAMEN[Number(weekdag)]}en ${PERIODESTAART[bereik]}`);
+
+  /** Staafgrafiek per weekdag met een streepje voor een tweede waarde. */
+  function weekdagStaven(el, haalWaarde, haalTweede, haalOnderschrift, aria) {
     const s = DATA[bereik];
     const b = Math.max(280, el.clientWidth);
     const h = 230;
@@ -561,31 +727,46 @@
     const bb = b - m.l - m.r;
     const bh = h - m.t - m.o;
 
-    const stappen = asStappen(Math.max(...s.perWeekdag.map((w) => w.gemiddeld), 1));
+    const waarden = s.perWeekdag.map(haalWaarde);
+    const tweedes = s.perWeekdag.map(haalTweede);
+    const stappen = asStappen(Math.max(...waarden, ...tweedes, 1));
     const maxY = stappen[stappen.length - 1];
     const y = (v) => m.t + bh - (v / maxY) * bh;
     const vak = bb / 5;
     const breedte = Math.min(52, vak - 10);
 
-    el.innerHTML = `<svg viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" role="img"
-        aria-label="Gemiddelde bezetting per weekdag">
+    el.innerHTML = `<svg viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" role="img" aria-label="${aria}">
       ${stappen.map((v) => `<line class="raster" x1="${m.l}" x2="${b - m.r}" y1="${y(v)}" y2="${y(v)}"></line>
         <text x="${m.l - 7}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('')}
       ${s.perWeekdag.map((w, i) => {
         const px = m.l + i * vak + (vak - breedte) / 2;
-        return `<path class="staaf" d="${staafPad(px, y(w.gemiddeld), breedte, m.t + bh - y(w.gemiddeld))}"></path>
-          <text class="waardelabel" x="${px + breedte / 2}" y="${y(w.gemiddeld) - 6}" text-anchor="middle">${nl(w.gemiddeld)}</text>`;
+        const v = waarden[i];
+        const t = tweedes[i];
+        return `<path class="staaf" d="${staafPad(px, y(v), breedte, m.t + bh - y(v))}"></path>
+          <rect class="staaf-zomer" x="${px}" y="${y(t) - 1.25}" width="${breedte}" height="2.5" rx="1.25"></rect>
+          <text class="waardelabel" x="${px + breedte / 2}" y="${y(Math.max(v, t)) - 7}" text-anchor="middle">${nl(v)}</text>`;
       }).join('')}
       <line class="as" x1="${m.l}" x2="${b - m.r}" y1="${m.t + bh}" y2="${m.t + bh}"></line>
       ${s.perWeekdag.map((w, i) => `
         <text x="${m.l + i * vak + vak / 2}" y="${h - 18}" text-anchor="middle">${DAGNAMEN[i].slice(0, 2)}</text>
-        <text x="${m.l + i * vak + vak / 2}" y="${h - 5}" text-anchor="middle" opacity="0.7">${pct(w.graad)}</text>`).join('')}
+        <text x="${m.l + i * vak + vak / 2}" y="${h - 5}" text-anchor="middle" opacity="0.7">${haalOnderschrift(w)}</text>`).join('')}
     </svg>`;
   }
 
+  const tekenWeekdag = (el) => weekdagStaven(
+    el, (w) => w.gemiddeld, (w) => w.piek, (w) => pct(w.graad),
+    'Gemiddeld gelijktijdig bezette werkplekken per weekdag',
+  );
+
+  const tekenGebruikt = (el) => weekdagStaven(
+    el, (w) => w.gebruiktGemiddeld, (w) => w.gebruiktHoogste, (w) => `${w.volledigeDagen}x alle ${DATA.aantalPlekken}`,
+    'Gemiddeld aantal verschillende werkplekken dat per weekdag gebruikt werd',
+  );
+
   function tekenUur(el) {
     const s = DATA[bereik];
-    const uren = s.perUur.map((v, u) => ({ u, v })).filter((x) => x.u >= 5 && x.u <= 21);
+    const bron = weekdag === 'alle' ? s.perUur : s.perWeekdagUur[Number(weekdag)];
+    const uren = bron.map((v, u) => ({ u, v })).filter((x) => x.u >= 5 && x.u <= 21);
     const b = Math.max(280, el.clientWidth);
     const h = 230;
     const m = { l: 34, r: 10, t: 18, o: 30 };
@@ -615,29 +796,159 @@
     </svg>`;
   }
 
+  /** Hoe vaak kwam elk aantal verschillende plekken voor? */
+  function tekenVerdeling(el) {
+    const dagen = gekozenDagen();
+    const n = DATA.aantalPlekken;
+    // Groepjes van vijf, plus een eigen balk voor "alle plekken".
+    const randen = [];
+    for (let v = 0; v < n; v += 5) randen.push(v);
+    const bakken = randen.map((van, i) => ({
+      van,
+      tot: i === randen.length - 1 ? n - 1 : Math.min(n - 1, van + 4),
+      aantal: 0,
+    }));
+    const volledig = { van: n, tot: n, aantal: 0 };
+
+    for (const d of dagen) {
+      if (d.gebruikt >= n) { volledig.aantal++; continue; }
+      const bak = bakken.find((x) => d.gebruikt >= x.van && d.gebruikt <= x.tot);
+      if (bak) bak.aantal++;
+    }
+    const alles = [...bakken, volledig];
+
+    const b = Math.max(280, el.clientWidth);
+    const h = 230;
+    const m = { l: 34, r: 10, t: 18, o: 40 };
+    const bb = b - m.l - m.r;
+    const bh = h - m.t - m.o;
+
+    const stappen = asStappen(Math.max(...alles.map((x) => x.aantal), 1));
+    const maxY = stappen[stappen.length - 1];
+    const y = (v) => m.t + bh - (v / maxY) * bh;
+    const vak = bb / alles.length;
+    const breedte = Math.max(4, vak - 4);
+
+    el.innerHTML = `<svg viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" role="img"
+        aria-label="Hoe vaak elk aantal verschillende gebruikte werkplekken voorkwam">
+      ${stappen.map((v) => `<line class="raster" x1="${m.l}" x2="${b - m.r}" y1="${y(v)}" y2="${y(v)}"></line>
+        <text x="${m.l - 7}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('')}
+      ${alles.map((x, i) => {
+        const px = m.l + i * vak + (vak - breedte) / 2;
+        return `<path class="staaf" d="${staafPad(px, y(x.aantal), breedte, m.t + bh - y(x.aantal))}"></path>
+          ${x.aantal ? `<text class="waardelabel" x="${px + breedte / 2}" y="${y(x.aantal) - 6}" text-anchor="middle">${x.aantal}</text>` : ''}`;
+      }).join('')}
+      <line class="as" x1="${m.l}" x2="${b - m.r}" y1="${m.t + bh}" y2="${m.t + bh}"></line>
+      ${alles.map((x, i) => `<text x="${m.l + i * vak + vak / 2}" y="${h - 22}" text-anchor="middle">${
+        x.van === n ? 'alle' : (x.van === x.tot ? x.van : `${x.van}-${x.tot}`)}</text>`).join('')}
+      <text x="${m.l + bb / 2}" y="${h - 6}" text-anchor="middle">verschillende plekken gebruikt op één dag</text>
+    </svg>`;
+  }
+
   tekenIn($('#g-weekdag'), tekenWeekdag);
+  tekenIn($('#g-gebruikt'), tekenGebruikt);
   tekenIn($('#g-uur'), tekenUur);
+  tekenIn($('#g-verdeling'), tekenVerdeling);
+
+  /* ── Tegels, tabellen en teksten bijwerken ─────────────────────────── */
 
   function werkBij() {
     const s = DATA[bereik];
+    const n = DATA.aantalPlekken;
+    const dagen = gekozenDagen();
+
+    const gem = dagen.length ? dagen.reduce((a, d) => a + d.gemiddeld, 0) / dagen.length : 0;
+    const piekHoogste = Math.max(...dagen.map((d) => d.piek), 0);
+    const gebruiktGem = dagen.length ? dagen.reduce((a, d) => a + d.gebruikt, 0) / dagen.length : 0;
+    const gebruiktHoogste = Math.max(...dagen.map((d) => d.gebruikt), 0);
+    const volledig = dagen.filter((d) => d.gebruikt >= n).length;
+
+    // ── Teksten bij de weekdaggrafieken
+    const rustigste = [...s.perWeekdag].sort((a, b) => a.gemiddeld - b.gemiddeld)[0];
+    const drukste = [...s.perWeekdag].sort((a, b) => b.gemiddeld - a.gemiddeld)[0];
     $('#weekdag-uitleg').textContent =
-      `Gemiddeld over ${BEREIKNAAM[bereik]}. Vrijdag is de rustigste dag, met ` +
-      `${nl(s.perWeekdag[4].gemiddeld)} bezette plekken tegenover ${nl(Math.max(...s.perWeekdag.map((w) => w.gemiddeld)))} op de drukste dag.`;
+      `Over ${BEREIKNAAM[bereik]}. ${DAGNAMEN[drukste.weekdag]} is de drukste dag met gemiddeld ` +
+      `${nl(drukste.gemiddeld)} bezette plekken, ${DAGNAMEN[rustigste.weekdag]} de rustigste met ${nl(rustigste.gemiddeld)}.`;
+
+    const meesteVolledig = [...s.perWeekdag].sort((a, b) => b.volledigeDagen - a.volledigeDagen)[0];
+    const geenVolledig = s.perWeekdag.filter((w) => w.volledigeDagen === 0);
+    $('#gebruikt-uitleg').textContent =
+      `Over ${BEREIKNAAM[bereik]}. Op ${DAGNAMEN[meesteVolledig.weekdag]} waren alle ${n} plekken het vaakst ` +
+      `allemaal eens gebruikt: ${meesteVolledig.volledigeDagen} van de ${meesteVolledig.dagen} dagen.` +
+      (geenVolledig.length
+        ? ` Op ${geenVolledig.map((w) => DAGNAMEN[w.weekdag]).join(' en ')} gebeurde dat geen enkele keer.`
+        : '');
+
+    $('#weekdagtabel-caption').textContent =
+      `${BEREIKNAAM[bereik].charAt(0).toUpperCase() + BEREIKNAAM[bereik].slice(1)}. ` +
+      `"Verschillende plekken" telt hoeveel van de ${n} bureaus in de loop van de dag gebruikt werden.`;
+
+    $('#weekdagtabel tbody').innerHTML = s.perWeekdag.map((w) => `
+      <tr>
+        <td>${DAGNAMEN[w.weekdag]}</td>
+        <td class="getal">${w.dagen}</td>
+        <td class="getal">${nl(w.gemiddeld)}<span style="color:var(--ink-3)"> &middot; ${pct(w.graad)}</span></td>
+        <td class="getal">${nl(w.piek)}</td>
+        <td class="getal">${nl(w.gebruiktGemiddeld)}</td>
+        <td class="getal">${w.gebruiktHoogste}</td>
+        <td class="getal">${w.volledigeDagen === 0 ? 'nooit' : `${w.volledigeDagen} van ${w.dagen}`}</td>
+        <td class="getal">${w.druksteUur === null ? '' : String(w.druksteUur).padStart(2, '0') + 'u'}</td>
+      </tr>`).join('');
+
+    // ── Tegels bij de ingezoomde weekdag
+    $('#zoomtegels').innerHTML = [
+      ['Gemiddeld gelijktijdig bezet', nl(gem), `${pct(gem / n)} van de ${n} plekken`],
+      ['Drukste moment', nl(piekHoogste), `${pct(piekHoogste / n)}, hoogste van de periode`],
+      ['Verschillende plekken per dag', nl(gebruiktGem), `hoogste ${gebruiktHoogste} van de ${n}`],
+      ['Dagen met alle plekken gebruikt', String(volledig), `van de ${dagen.length} dagen${dagen.length ? ` &middot; ${pct(volledig / dagen.length)}` : ''}`],
+    ].map(([titel, waarde, bij]) => `
+      <div class="tegel">
+        <div class="titel">${titel}</div>
+        <div class="waarde">${waarde}</div>
+        <div class="bij">${bij}</div>
+      </div>`).join('');
+
     $('#uur-uitleg').textContent =
-      `Gemiddeld aantal bezette plekken per uur, over ${BEREIKNAAM[bereik]}. Het gearceerde deel is de kantoorperiode van ${DATA.startUur} tot ${DATA.eindUur} uur.`;
+      `Gemiddeld aantal gelijktijdig bezette plekken per uur, over ${selectieLabel()}. ` +
+      `Het gearceerde deel is de kantoorperiode van ${DATA.startUur} tot ${DATA.eindUur} uur.`;
+
+    $('#verdeling-uitleg').textContent =
+      `Aantal dagen waarop zoveel verschillende plekken aan bod kwamen, over ${selectieLabel()}. ` +
+      `De rechtse balk zijn de dagen waarop alle ${n} plekken gebruikt werden.`;
+
+    // ── Tabel met de afzonderlijke dagen
+    $('#dagtabel-caption').textContent = `${dagen.length} dagen, nieuwste eerst.`;
+    $('#dagtabel tbody').innerHTML = [...dagen].reverse().map((d) => `
+      <tr>
+        <td>${datumLang(d.datum)}</td>
+        <td>${DAGNAMEN[d.weekdag]}</td>
+        <td class="getal">${nl(d.gemiddeld)}</td>
+        <td class="getal">${nl(d.piek)}</td>
+        <td class="getal">${String(d.piekUur).padStart(2, '0')}u</td>
+        <td class="getal">${d.gebruikt}${d.gebruikt >= n ? ' (alle)' : ''}</td>
+        <td>${d.gesloten ?? ''}</td>
+      </tr>`).join('') || '<tr><td colspan="7">Geen dagen in deze selectie.</td></tr>';
+
     tekenWeekdag($('#g-weekdag'));
+    tekenGebruikt($('#g-gebruikt'));
     tekenUur($('#g-uur'));
+    tekenVerdeling($('#g-verdeling'));
   }
 
-  $('#keuze').addEventListener('click', (evt) => {
-    const knop = evt.target.closest('button[data-bereik]');
-    if (!knop) return;
-    bereik = knop.dataset.bereik;
-    for (const k of $('#keuze').querySelectorAll('button')) {
-      k.setAttribute('aria-pressed', String(k === knop));
-    }
-    werkBij();
-  });
+  function koppelKeuze(id, zetter) {
+    $(id).addEventListener('click', (evt) => {
+      const knop = evt.target.closest('button');
+      if (!knop) return;
+      zetter(knop);
+      for (const k of $(id).querySelectorAll('button')) {
+        k.setAttribute('aria-pressed', String(k === knop));
+      }
+      werkBij();
+    });
+  }
+
+  koppelKeuze('#keuze', (k) => { bereik = k.dataset.bereik; });
+  koppelKeuze('#dagkeuze', (k) => { weekdag = k.dataset.dag; });
 
   werkBij();
 
@@ -646,14 +957,31 @@
   const opGebruik = [...DATA.perWerkplek].sort((a, b) => b.bezettingsgraad - a.bezettingsgraad);
   const hoogste = opGebruik[0].bezettingsgraad;
 
+  /** Kleurt een weekdagcel naar het aandeel dagen dat de plek gebruikt werd. */
+  function cel(aantal, totaal) {
+    const deel = totaal ? aantal / totaal : 0;
+    const stap = deel === 0 ? 1 : Math.min(5, Math.max(1, Math.ceil(deel * 5)));
+    const inkt = stap >= 5 ? 'var(--seq-ink-5)' : 'var(--seq-ink-1)';
+    return `<td class="cel"><span style="background:var(--seq-${stap});color:${inkt}"
+      title="${aantal} van de ${totaal} dagen">${pct(deel)}</span></td>`;
+  }
+
   $('#werkplekken tbody').innerHTML = opGebruik.map((w) => `
     <tr>
       <td>${w.naam}</td>
       <td class="getal">${pct(w.bezettingsgraad)}</td>
       <td><div class="balk"><i style="width:${((w.bezettingsgraad / hoogste) * 100).toFixed(1)}%"></i></div></td>
       <td class="getal">${w.dagenGebruikt} van ${w.werkdagen}</td>
+      ${w.perWeekdag.map((aantal, i) => cel(aantal, DATA.werkdagenPerWeekdag[i])).join('')}
       <td class="getal">${nl(w.bezetteUren, 0)}</td>
     </tr>`).join('');
+
+  const zwakstePlek = [...DATA.perWerkplek].sort((a, b) => a.bezettingsgraad - b.bezettingsgraad)[0];
+  const vrijdagStil = DATA.perWerkplek.filter((w) => w.perWeekdag[4] / DATA.werkdagenPerWeekdag[4] < 0.4).length;
+  $('#werkplek-noot').textContent =
+    `Elke plek werd dit jaar gebruikt; de minst gebruikte is ${zwakstePlek.naam} met ` +
+    `${pct(zwakstePlek.bezettingsgraad)} van de kantooruren. ` +
+    `${vrijdagStil} van de ${DATA.aantalPlekken} plekken bleven op meer dan zes vrijdagen op de tien onbezet.`;
 
   $('#gesloten tbody').innerHTML = DATA.geslotenDagen.map((d) => `
     <tr>
@@ -665,7 +993,9 @@
   /* ── Kopieerknop ───────────────────────────────────────────────────── */
 
   $('#kopieer').addEventListener('click', async () => {
-    const kop = ['datum', 'weekdag', 'werkdag', 'juli of augustus', 'feestdag of sluiting', 'gemiddeld bezet', 'bezettingsgraad', 'piek'];
+    const kop = ['datum', 'weekdag', 'werkdag', 'juli of augustus', 'feestdag of sluiting',
+      'gemiddeld bezet', 'bezettingsgraad', 'drukste moment', 'drukste uur',
+      'verschillende plekken gebruikt', 'alle plekken gebruikt'];
     const regels = DATA.perDag.map((d) => [
       d.datum,
       ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'][d.weekdag],
@@ -675,6 +1005,9 @@
       nl(d.gemiddeld, 2),
       nl(d.graad * 100, 1) + '%',
       nl(d.piek, 2),
+      String(d.piekUur).padStart(2, '0') + 'u',
+      d.gebruikt,
+      d.gebruikt >= DATA.aantalPlekken ? 'ja' : 'nee',
     ].join('\t'));
 
     const tekst = [kop.join('\t'), ...regels].join('\n');
