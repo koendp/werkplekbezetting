@@ -8,3 +8,6 @@ data/*
 # Gebouwde rapporten en hun meegekopieerde logo's: afgeleid van data/ en public/.
 rapporten/bezetting-*.html
 rapporten/logo-pov*.png
+
+# De losse versie met ingesloten logo's hoort ook niet in de repository.
+rapporten/bezetting-*-los.html

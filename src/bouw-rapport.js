@@ -40,6 +40,21 @@ for (const naam of ['logo-pov.png', 'logo-pov-wit.png']) {
   copyFileSync(join(root, 'public', naam), join(root, 'rapporten', naam));
 }
 
-console.log(`Geschreven: rapporten/bezetting-${kort}.html (${(pagina.length / 1024).toFixed(0)} kB)`);
+/**
+ * Daarnaast een versie waarin de logo's in het bestand zelf zitten. Die ene
+ * HTML kan je doorsturen of op een netwerkschijf zetten; hij opent in elke
+ * browser, zonder account en zonder internetverbinding.
+ */
+let losseVersie = pagina;
+for (const naam of ['logo-pov.png', 'logo-pov-wit.png']) {
+  const base64 = readFileSync(join(root, 'public', naam)).toString('base64');
+  losseVersie = losseVersie.replaceAll(`src="${naam}"`, `src="data:image/png;base64,${base64}"`);
+}
+
+const losPad = join(root, `rapporten/bezetting-${kort}-los.html`);
+writeFileSync(losPad, losseVersie);
+
+console.log(`Geschreven: rapporten/bezetting-${kort}.html (${(pagina.length / 1024).toFixed(0)} kB, logo's ernaast)`);
+console.log(`           rapporten/bezetting-${kort}-los.html (${(losseVersie.length / 1024).toFixed(0)} kB, alles in één bestand)`);
 console.log(`  ${gegevens.aantalPlekken} werkplekken, ${gegevens.perDag.length} dagen`);
 console.log(`  gemiddeld zonder zomer: ${gegevens.zonderZomer.gemiddeld}`);
