@@ -4,3 +4,7 @@ node_modules/
 # De ruwe historiek blijft lokaal; alleen de berekende momentopname wordt gepubliceerd.
 data/*
 !data/momentopname.js
+
+# Gebouwde rapporten en hun meegekopieerde logo's: afgeleid van data/ en public/.
+rapporten/bezetting-*.html
+rapporten/logo-pov*.png

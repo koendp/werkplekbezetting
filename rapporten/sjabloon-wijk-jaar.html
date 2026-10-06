@@ -1,0 +1,698 @@
+<title>Bezetting W3.3</title>
+
+<style>
+  /* Huisstijl Provincie Oost-Vlaanderen: oranje C86B02 en donkergrijs 565555,
+     met tints daarvan. Layout: één kolom, kerncijfers boven, detail daaronder. */
+  :root {
+    --plane: #f4f1ee;
+    --surface: #ffffff;
+    --ink: #3a3938;
+    --ink-2: #565555;
+    --ink-3: #7d7a76;
+    --raster: #e6e1dc;
+    --as: #c9c4bf;
+    --rand: rgba(86, 85, 85, 0.16);
+
+    --oranje: #c86b02;
+    --oranje-diep: #985102;
+    --neutraal: #565555;
+
+    --font: 'Meta Pro', 'Aptos', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      color-scheme: dark;
+      --plane: #121211;
+      --surface: #1a1a19;
+      --ink: #f2f0ec;
+      --ink-2: #c3c0b9;
+      --ink-3: #9b9791;
+      --raster: #2e2c2a;
+      --as: #3b3937;
+      --rand: rgba(242, 240, 236, 0.14);
+      --neutraal: #e1dfda;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --plane: #121211;
+    --surface: #1a1a19;
+    --ink: #f2f0ec;
+    --ink-2: #c3c0b9;
+    --ink-3: #9b9791;
+    --raster: #2e2c2a;
+    --as: #3b3937;
+    --rand: rgba(242, 240, 236, 0.14);
+    --neutraal: #e1dfda;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--plane);
+    color: var(--ink-2);
+    font: 15px/1.55 var(--font);
+  }
+
+  .blad { max-width: 1060px; margin: 0 auto; padding-block: 28px 56px; padding-left: 20px; padding-right: 20px; }
+
+  /* ── Kop ─────────────────────────────────────────────────────────────── */
+
+  header { display: flex; align-items: flex-start; gap: 28px; margin-bottom: 28px; }
+  header .tekst { flex: 1 1 auto; min-width: 0; }
+  header .eyebrow { font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+  h1 { margin: 0 0 8px; font-size: clamp(26px, 4.4vw, 36px); font-weight: 800; letter-spacing: -0.02em; color: var(--oranje); text-wrap: balance; line-height: 1.12; }
+  header p { margin: 0; font-size: 14.5px; max-width: 62ch; }
+  header .logo { flex: 0 0 auto; width: auto; height: 104px; }
+  header .logo.negatief { display: none; }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) header .logo.kleur { display: none; }
+    :root:not([data-theme='light']) header .logo.negatief { display: block; }
+  }
+  :root[data-theme='dark'] header .logo.kleur { display: none; }
+  :root[data-theme='dark'] header .logo.negatief { display: block; }
+
+  @media (max-width: 620px) {
+    header { flex-direction: column-reverse; gap: 16px; }
+    header .logo { height: 80px; align-self: flex-end; }
+  }
+
+  /* ── Secties ─────────────────────────────────────────────────────────── */
+
+  section { margin-top: 30px; }
+  h2 { margin: 0 0 4px; font-size: 19px; font-weight: 700; color: var(--ink); text-wrap: balance; }
+  .uitleg { margin: 0 0 16px; font-size: 13.5px; color: var(--ink-3); max-width: 70ch; }
+
+  .kaart {
+    background: var(--surface);
+    border: 1px solid var(--rand);
+    border-radius: 8px;
+    padding: 18px 20px 14px;
+  }
+
+  .kaarten { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+  .kaarten > * { min-width: 0; }
+
+  /* ── Antwoordblok ────────────────────────────────────────────────────── */
+
+  .antwoord {
+    background: var(--surface);
+    border: 1px solid var(--rand);
+    border-top: 3px solid var(--oranje);
+    border-radius: 8px;
+    padding: 22px 24px;
+  }
+
+  .hoofdcijfer { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 18px; margin-bottom: 4px; }
+  .hoofdcijfer .getal { font-size: clamp(40px, 7vw, 56px); font-weight: 800; letter-spacing: -0.03em; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+  .hoofdcijfer .van { font-size: 17px; color: var(--ink-2); }
+  .hoofdcijfer .graad { font-size: 17px; font-weight: 700; color: var(--oranje); }
+  .antwoord > p { margin: 10px 0 0; font-size: 14px; max-width: 68ch; }
+
+  /* ── Tabellen ────────────────────────────────────────────────────────── */
+
+  .hoes { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  caption { text-align: left; font-size: 12px; color: var(--ink-3); padding-bottom: 8px; }
+  th { text-align: left; font-weight: 700; font-size: 12px; color: var(--ink-3); padding: 7px 12px 7px 0; border-bottom: 1px solid var(--as); white-space: nowrap; }
+  td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--raster); }
+  tr:last-child td { border-bottom: 0; }
+  .getal, th.getal { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr.nadruk td { font-weight: 700; color: var(--ink); }
+  tbody tr.nadruk { background: color-mix(in srgb, var(--oranje) 7%, transparent); }
+
+  .balk { height: 8px; border-radius: 2px; background: var(--raster); min-width: 90px; overflow: hidden; }
+  .balk > i { display: block; height: 100%; background: var(--oranje); border-radius: 2px; }
+
+  /* ── Bedieningselementen ─────────────────────────────────────────────── */
+
+  .keuze { display: inline-flex; flex-wrap: wrap; gap: 2px; background: var(--raster); padding: 3px; border-radius: 7px; margin-bottom: 16px; }
+  .keuze button {
+    appearance: none; border: 0; background: none; cursor: pointer;
+    font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-3);
+    padding: 7px 13px; border-radius: 5px;
+  }
+  .keuze button:hover { color: var(--ink); }
+  .keuze button[aria-pressed='true'] { background: var(--surface); color: var(--oranje); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  .keuze button:focus-visible, .knop:focus-visible { outline: 2px solid var(--oranje); outline-offset: 2px; }
+
+  .knop {
+    appearance: none; font: inherit; font-size: 13.5px; font-weight: 600;
+    padding: 8px 14px; border: 1px solid var(--as); border-radius: 6px;
+    background: var(--surface); color: var(--ink); cursor: pointer;
+  }
+  .knop:hover { border-color: var(--oranje); color: var(--oranje); }
+
+  /* ── Grafieken ───────────────────────────────────────────────────────── */
+
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { font: 11px var(--font); fill: var(--ink-3); }
+  svg .raster { stroke: var(--raster); stroke-width: 1; }
+  svg .as { stroke: var(--as); stroke-width: 1; }
+  svg .staaf { fill: var(--oranje); }
+  svg .staaf-zomer { fill: var(--neutraal); }
+  svg .lijn { fill: none; stroke: var(--oranje); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  svg .trend { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; opacity: 0.75; }
+  svg .vlak { fill: var(--oranje); opacity: 0.13; }
+  svg .zomerband { fill: var(--neutraal); opacity: 0.1; }
+  svg .kantoorband { fill: var(--oranje); opacity: 0.07; }
+  svg .feest { stroke: var(--as); stroke-width: 1; stroke-dasharray: 2 2; }
+  svg .waardelabel { fill: var(--ink); font-weight: 700; }
+
+  .legende { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12.5px; color: var(--ink-2); margin: 0 0 12px; }
+  .legende span { display: inline-flex; align-items: center; gap: 7px; }
+  .legende i { width: 11px; height: 11px; border-radius: 2px; flex: 0 0 auto; }
+  .legende i.lijn { width: 15px; height: 3px; border-radius: 1.5px; }
+
+  /* ── Voetnoten ───────────────────────────────────────────────────────── */
+
+  .noot { font-size: 13px; color: var(--ink-3); max-width: 72ch; }
+  .noot p { margin: 0 0 10px; }
+  .noot strong { color: var(--ink-2); }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; font-weight: 600; color: var(--ink-2); font-size: 13.5px; }
+  summary:focus-visible { outline: 2px solid var(--oranje); outline-offset: 2px; }
+
+  footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--rand); font-size: 12px; color: var(--ink-3); }
+
+  .melding { font-size: 12.5px; color: var(--ink-3); margin-top: 10px; }
+</style>
+
+<div class="blad">
+
+  <header>
+    <div class="tekst">
+      <div class="eyebrow">Werkwijk W3.3 &middot; lokaal 320</div>
+      <h1>Bezetting van de werkplekken</h1>
+      <p id="kopregel"></p>
+    </div>
+    <img class="logo kleur" src="logo-pov.png" alt="Provincie Oost-Vlaanderen">
+    <img class="logo negatief" src="logo-pov-wit.png" alt="Provincie Oost-Vlaanderen">
+  </header>
+
+  <!-- ── Het antwoord ──────────────────────────────────────────────────── -->
+
+  <section>
+    <div class="antwoord">
+      <div class="eyebrow">Gemiddelde bezetting per werkdag, zonder juli en augustus</div>
+      <div class="hoofdcijfer">
+        <span class="getal" id="hoofdgetal"></span>
+        <span class="van" id="hoofdvan"></span>
+        <span class="graad" id="hoofdgraad"></span>
+      </div>
+      <p id="hoofdtekst"></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>De gemiddelden naast elkaar</h2>
+    <p class="uitleg">
+      Het gemiddelde telt hoeveel van de werkplekken bezet waren tussen 8 en 17 uur,
+      uitgemiddeld over alle werkdagen in de gekozen periode. Weekends tellen niet mee.
+    </p>
+    <div class="kaart hoes">
+      <table id="vergelijking">
+        <caption>Juli en augustus liggen ongeveer twee werkplekken lager dan de rest van het jaar.</caption>
+        <thead>
+          <tr>
+            <th>Periode</th>
+            <th class="getal">Werkdagen</th>
+            <th class="getal">Gemiddeld bezet</th>
+            <th class="getal">Van de 41</th>
+            <th class="getal">Mediaan</th>
+            <th class="getal">Drukste dag</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="melding">
+      De onderste twee rijen laten ook de feestdagen en de kerstsluiting weg. Op die zestien
+      dagen was er vrijwel niemand aanwezig, wat het jaargemiddelde met ruim een werkplek drukt
+      zonder iets te zeggen over hoe de wijk gebruikt wordt.
+    </p>
+  </section>
+
+  <!-- ── Per dag ───────────────────────────────────────────────────────── -->
+
+  <section>
+    <h2>Gemiddelde bezetting per dag</h2>
+    <p class="uitleg">
+      Elke staaf is één werkdag. De donkere lijn is het gemiddelde over vier weken, zodat het
+      verloop door het jaar zichtbaar wordt.
+    </p>
+    <div class="legende">
+      <span><i style="background:var(--oranje)"></i>werkdag buiten de zomer</span>
+      <span><i style="background:var(--neutraal)"></i>werkdag in juli of augustus</span>
+      <span><i class="lijn" style="background:var(--ink)"></i>gemiddelde over vier weken</span>
+    </div>
+    <div class="kaart"><div id="g-dag"></div></div>
+  </section>
+
+  <!-- ── Per maand ─────────────────────────────────────────────────────── -->
+
+  <section>
+    <h2>Per maand</h2>
+    <p class="uitleg">Gemiddelde bezetting per werkdag, per maand. Juli en augustus staan in het grijs.</p>
+    <div class="kaart"><div id="g-maand"></div></div>
+  </section>
+
+  <!-- ── Weekdag en uur ────────────────────────────────────────────────── -->
+
+  <section>
+    <h2>Patroon binnen de week en de dag</h2>
+    <p class="uitleg">Kies welke periode je wil bekijken. Beide grafieken volgen die keuze.</p>
+
+    <div class="keuze" id="keuze" role="group" aria-label="Periode kiezen">
+      <button type="button" data-bereik="zonderZomer" aria-pressed="true">Zonder juli en augustus</button>
+      <button type="button" data-bereik="heelJaar" aria-pressed="false">Heel jaar</button>
+      <button type="button" data-bereik="alleenZomer" aria-pressed="false">Enkel juli en augustus</button>
+    </div>
+
+    <div class="kaarten">
+      <div class="kaart">
+        <h2 style="font-size:15px">Per weekdag</h2>
+        <p class="uitleg" id="weekdag-uitleg"></p>
+        <div id="g-weekdag"></div>
+      </div>
+      <div class="kaart">
+        <h2 style="font-size:15px">Verloop over de dag</h2>
+        <p class="uitleg" id="uur-uitleg"></p>
+        <div id="g-uur"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Per werkplek ──────────────────────────────────────────────────── -->
+
+  <section>
+    <h2>Per werkplek over het hele jaar</h2>
+    <p class="uitleg">
+      Hoeveel procent van de kantooruren elke werkplek bezet was, en op hoeveel van de 261
+      werkdagen hij minstens een keer gebruikt werd.
+    </p>
+    <div class="kaart hoes">
+      <table id="werkplekken">
+        <thead>
+          <tr>
+            <th>Werkplek</th>
+            <th class="getal">Bezetting</th>
+            <th style="width:30%">&nbsp;</th>
+            <th class="getal">Dagen gebruikt</th>
+            <th class="getal">Uren bezet</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Verantwoording ────────────────────────────────────────────────── -->
+
+  <section>
+    <h2>Hoe deze cijfers tot stand komen</h2>
+    <div class="kaart noot">
+      <p>
+        Onder elk bureau in W3.3 zit een bezettingssensor van Disruptive Technologies. Die meldt
+        alleen een wissel: bezet geworden of weer vrij. Per werkplek is daaruit een tijdlijn
+        gebouwd, verdeeld in blokjes van een kwartier. Elk blokje krijgt het deel van de tijd dat
+        de plek bezet was, zodat de som over de 41 werkplekken het verwachte aantal bezette
+        plekken op dat moment geeft.
+      </p>
+      <p>
+        <strong>Kantooruren</strong> zijn hier 8 tot 17 uur. <strong>Werkdagen</strong> zijn
+        maandag tot vrijdag; weekends tellen nergens mee. Alle tijden staan in de tijdzone
+        Brussel.
+      </p>
+      <p>
+        <strong>Kwaliteit van de meting.</strong> Alle 41 sensoren hebben in elke maand van het
+        jaar gegevens doorgestuurd, er zijn geen gaten. In het weekend ligt het gemiddelde op
+        0,05 werkplek, wat betekent dat er geen sensoren blijven hangen op bezet. Geen enkele
+        werkplek bleef het hele jaar ongebruikt.
+      </p>
+      <p>
+        <strong>Eén uitschieter.</strong> Op donderdag 7 mei 2026 zat W3.3 op 1,4 bezette plekken
+        terwijl de andere werkwijken gewoon doordraaiden. Dat is dus geen meetfout maar een dag
+        waarop de wijk zelf grotendeels afwezig was.
+      </p>
+      <details>
+        <summary>De zestien dagen met feestdag of sluiting</summary>
+        <div class="hoes" style="margin-top:12px">
+          <table id="gesloten">
+            <thead><tr><th>Datum</th><th>Reden</th><th class="getal">Gemiddeld bezet</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <h2>De cijfers meenemen</h2>
+    <p class="uitleg">Kopieert alle 365 dagen als tabel, klaar om in Excel te plakken.</p>
+    <button class="knop" id="kopieer" type="button">Kopieer de daggegevens</button>
+    <span class="melding" id="kopieermelding" role="status" aria-live="polite"></span>
+  </section>
+
+  <footer id="voet"></footer>
+
+</div>
+
+<script>
+  const DATA = /*GEGEVENS*/null/*GEGEVENS*/;
+
+  const $ = (s) => document.querySelector(s);
+
+  const nl = (v, d = 1) => v.toLocaleString('nl-BE', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const pct = (v) => (v * 100).toLocaleString('nl-BE', { maximumFractionDigits: 0 }) + '%';
+  const DAGNAMEN = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag'];
+  const MAANDNAMEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+
+  const maandKort = (m) => MAANDNAMEN[Number(m.slice(5, 7)) - 1].slice(0, 3);
+  const datumLang = (iso) => {
+    const d = new Date(iso + 'T12:00:00Z');
+    return `${d.getUTCDate()} ${MAANDNAMEN[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  };
+
+  /* ── Hertekenen bij venstergrootte ─────────────────────────────────── */
+
+  const tekenaars = new Map();
+  function tekenIn(houder, fn) { tekenaars.set(houder, fn); fn(houder); }
+
+  let timer;
+  addEventListener('resize', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { for (const [h, fn] of tekenaars) if (h.isConnected) fn(h); }, 160);
+  });
+
+  function asStappen(max, aantal = 4) {
+    if (max <= 0) return [0, 1];
+    const macht = 10 ** Math.floor(Math.log10(max / aantal));
+    const stap = [1, 2, 2.5, 5, 10].map((m) => m * macht).find((s) => s >= max / aantal) ?? 10 * macht;
+    const uit = [];
+    for (let v = 0; v <= max + stap * 0.001; v += stap) uit.push(+v.toFixed(6));
+    if (uit[uit.length - 1] < max) uit.push(uit[uit.length - 1] + stap);
+    return uit;
+  }
+
+  function staafPad(x, y, b, h, r = 3) {
+    if (h <= 0.5) return '';
+    const s = Math.max(0, Math.min(r, b / 2, h));
+    return `M${x},${y + h} L${x},${y + s} Q${x},${y} ${x + s},${y} L${x + b - s},${y} Q${x + b},${y} ${x + b},${y + s} L${x + b},${y + h} Z`;
+  }
+
+  /* ── Kop en antwoord ───────────────────────────────────────────────── */
+
+  const zz = DATA.zonderZomer;
+
+  $('#kopregel').textContent =
+    `${DATA.aantalPlekken} werkplekken, gemeten van ${datumLang(DATA.perDag[0].datum)} tot en met ` +
+    `${datumLang(DATA.perDag[DATA.perDag.length - 1].datum)}. Bezetting tijdens de kantooruren van ` +
+    `${DATA.startUur} tot ${DATA.eindUur} uur.`;
+
+  $('#hoofdgetal').textContent = nl(zz.gemiddeld);
+  $('#hoofdvan').textContent = `van de ${DATA.aantalPlekken} werkplekken`;
+  $('#hoofdgraad').textContent = pct(zz.gemiddeldeGraad);
+
+  const verschil = DATA.zonderZomer.gemiddeld - DATA.alleenZomer.gemiddeld;
+  $('#hoofdtekst').textContent =
+    `Over het hele jaar, juli en augustus meegerekend, is dat ${nl(DATA.heelJaar.gemiddeld)} ` +
+    `(${pct(DATA.heelJaar.gemiddeldeGraad)}). In juli en augustus zakt de bezetting naar ` +
+    `${nl(DATA.alleenZomer.gemiddeld)} (${pct(DATA.alleenZomer.gemiddeldeGraad)}), ` +
+    `dus ${nl(verschil)} werkplekken minder dan in de rest van het jaar. ` +
+    `Het drukste moment van het jaar telde ${nl(DATA.heelJaar.piekHoogste)} bezette plekken, ` +
+    `${pct(DATA.heelJaar.piekGraad)} van de wijk.`;
+
+  /* ── Vergelijkingstabel ────────────────────────────────────────────── */
+
+  const rijen = [
+    ['Heel jaar, alle werkdagen', DATA.heelJaar, false],
+    ['Zonder juli en augustus', DATA.zonderZomer, true],
+    ['Enkel juli en augustus', DATA.alleenZomer, false],
+    ['Heel jaar, zonder feestdagen en kerstsluiting', DATA.open, false],
+    ['Zonder zomer, feestdagen en kerstsluiting', DATA.openZonderZomer, false],
+  ];
+
+  $('#vergelijking tbody').innerHTML = rijen.map(([naam, s, nadruk]) => `
+    <tr${nadruk ? ' class="nadruk"' : ''}>
+      <td>${naam}</td>
+      <td class="getal">${s.werkdagen}</td>
+      <td class="getal">${nl(s.gemiddeld)}</td>
+      <td class="getal">${pct(s.gemiddeldeGraad)}</td>
+      <td class="getal">${nl(s.mediaan)}</td>
+      <td class="getal">${nl(s.hoogste)}</td>
+    </tr>`).join('');
+
+  /* ── Grafiek: per dag ──────────────────────────────────────────────── */
+
+  const werkdagen = DATA.perDag.filter((d) => d.werkdag);
+
+  // Voortschrijdend gemiddelde over twintig werkdagen, ongeveer vier weken.
+  const VENSTER = 20;
+  const trend = werkdagen.map((_, i) => {
+    const van = Math.max(0, i - Math.floor(VENSTER / 2));
+    const tot = Math.min(werkdagen.length, van + VENSTER);
+    const deel = werkdagen.slice(van, tot);
+    return deel.reduce((a, d) => a + d.gemiddeld, 0) / deel.length;
+  });
+
+  tekenIn($('#g-dag'), (el) => {
+    const b = Math.max(300, el.clientWidth);
+    const h = b < 520 ? 240 : 300;
+    const m = { l: 34, r: 10, t: 10, o: 34 };
+    const bb = b - m.l - m.r;
+    const bh = h - m.t - m.o;
+
+    const stappen = asStappen(Math.max(...werkdagen.map((d) => d.gemiddeld), 1));
+    const maxY = stappen[stappen.length - 1];
+    const y = (v) => m.t + bh - (v / maxY) * bh;
+    const vak = bb / werkdagen.length;
+    const breedte = Math.max(1, vak - 0.8);
+
+    // Band achter juli en augustus.
+    const banden = [];
+    let start = null;
+    werkdagen.forEach((d, i) => {
+      if (d.zomer && start === null) start = i;
+      if ((!d.zomer || i === werkdagen.length - 1) && start !== null) {
+        banden.push([start, d.zomer ? i + 1 : i]);
+        start = null;
+      }
+    });
+
+    // Eén tick per maand.
+    const ticks = [];
+    let vorige = '';
+    werkdagen.forEach((d, i) => {
+      const maand = d.datum.slice(0, 7);
+      if (maand !== vorige) { ticks.push({ i, maand }); vorige = maand; }
+    });
+    const tickStap = b < 560 ? 2 : 1;
+
+    el.innerHTML = `<svg viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" role="img"
+        aria-label="Gemiddelde bezetting per werkdag over het jaar">
+      ${banden.map(([a, z]) => `<rect class="zomerband" x="${m.l + a * vak}" y="${m.t}" width="${(z - a) * vak}" height="${bh}"></rect>`).join('')}
+      ${stappen.map((s) => `<line class="raster" x1="${m.l}" x2="${b - m.r}" y1="${y(s)}" y2="${y(s)}"></line>
+        <text x="${m.l - 7}" y="${y(s) + 4}" text-anchor="end">${s}</text>`).join('')}
+      ${werkdagen.map((d, i) => {
+        const x = m.l + i * vak;
+        return `<path class="${d.zomer ? 'staaf-zomer' : 'staaf'}" d="${staafPad(x, y(d.gemiddeld), breedte, m.t + bh - y(d.gemiddeld), 1)}"></path>`;
+      }).join('')}
+      <path class="trend" d="M${trend.map((v, i) => `${(m.l + i * vak + breedte / 2).toFixed(1)},${y(v).toFixed(1)}`).join(' L')}"></path>
+      <line class="as" x1="${m.l}" x2="${b - m.r}" y1="${m.t + bh}" y2="${m.t + bh}"></line>
+      ${ticks.filter((_, k) => k % tickStap === 0).map((t) => `
+        <line class="as" x1="${m.l + t.i * vak}" x2="${m.l + t.i * vak}" y1="${m.t + bh}" y2="${m.t + bh + 4}"></line>
+        <text x="${m.l + t.i * vak + 3}" y="${h - 16}" text-anchor="start">${maandKort(t.maand)}</text>
+        <text x="${m.l + t.i * vak + 3}" y="${h - 4}" text-anchor="start" opacity="0.7">${t.maand.slice(2, 4)}</text>`).join('')}
+    </svg>`;
+  });
+
+  /* ── Grafiek: per maand ────────────────────────────────────────────── */
+
+  tekenIn($('#g-maand'), (el) => {
+    const b = Math.max(300, el.clientWidth);
+    const h = 230;
+    const m = { l: 34, r: 10, t: 18, o: 36 };
+    const bb = b - m.l - m.r;
+    const bh = h - m.t - m.o;
+
+    const stappen = asStappen(Math.max(...DATA.perMaand.map((x) => x.gemiddeld), 1));
+    const maxY = stappen[stappen.length - 1];
+    const y = (v) => m.t + bh - (v / maxY) * bh;
+    const vak = bb / DATA.perMaand.length;
+    const breedte = Math.min(54, vak - 6);
+    const toonLabel = b >= 480;
+
+    el.innerHTML = `<svg viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" role="img"
+        aria-label="Gemiddelde bezetting per maand">
+      ${stappen.map((s) => `<line class="raster" x1="${m.l}" x2="${b - m.r}" y1="${y(s)}" y2="${y(s)}"></line>
+        <text x="${m.l - 7}" y="${y(s) + 4}" text-anchor="end">${s}</text>`).join('')}
+      ${DATA.perMaand.map((x, i) => {
+        const px = m.l + i * vak + (vak - breedte) / 2;
+        const hoogte = m.t + bh - y(x.gemiddeld);
+        return `<path class="${x.zomer ? 'staaf-zomer' : 'staaf'}" d="${staafPad(px, y(x.gemiddeld), breedte, hoogte)}"></path>
+          ${toonLabel ? `<text class="waardelabel" x="${px + breedte / 2}" y="${y(x.gemiddeld) - 6}" text-anchor="middle">${nl(x.gemiddeld, 0)}</text>` : ''}`;
+      }).join('')}
+      <line class="as" x1="${m.l}" x2="${b - m.r}" y1="${m.t + bh}" y2="${m.t + bh}"></line>
+      ${DATA.perMaand.map((x, i) => `
+        <text x="${m.l + i * vak + vak / 2}" y="${h - 18}" text-anchor="middle">${maandKort(x.maand)}</text>
+        <text x="${m.l + i * vak + vak / 2}" y="${h - 5}" text-anchor="middle" opacity="0.7">${pct(x.graad)}</text>`).join('')}
+    </svg>`;
+  });
+
+  /* ── Grafieken die de periodekeuze volgen ──────────────────────────── */
+
+  let bereik = 'zonderZomer';
+  const BEREIKNAAM = {
+    zonderZomer: 'alle werkdagen buiten juli en augustus',
+    heelJaar: 'alle werkdagen van het jaar',
+    alleenZomer: 'de werkdagen in juli en augustus',
+  };
+
+  function tekenWeekdag(el) {
+    const s = DATA[bereik];
+    const b = Math.max(280, el.clientWidth);
+    const h = 230;
+    const m = { l: 34, r: 10, t: 18, o: 34 };
+    const bb = b - m.l - m.r;
+    const bh = h - m.t - m.o;
+
+    const stappen = asStappen(Math.max(...s.perWeekdag.map((w) => w.gemiddeld), 1));
+    const maxY = stappen[stappen.length - 1];
+    const y = (v) => m.t + bh - (v / maxY) * bh;
+    const vak = bb / 5;
+    const breedte = Math.min(52, vak - 10);
+
+    el.innerHTML = `<svg viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" role="img"
+        aria-label="Gemiddelde bezetting per weekdag">
+      ${stappen.map((v) => `<line class="raster" x1="${m.l}" x2="${b - m.r}" y1="${y(v)}" y2="${y(v)}"></line>
+        <text x="${m.l - 7}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('')}
+      ${s.perWeekdag.map((w, i) => {
+        const px = m.l + i * vak + (vak - breedte) / 2;
+        return `<path class="staaf" d="${staafPad(px, y(w.gemiddeld), breedte, m.t + bh - y(w.gemiddeld))}"></path>
+          <text class="waardelabel" x="${px + breedte / 2}" y="${y(w.gemiddeld) - 6}" text-anchor="middle">${nl(w.gemiddeld)}</text>`;
+      }).join('')}
+      <line class="as" x1="${m.l}" x2="${b - m.r}" y1="${m.t + bh}" y2="${m.t + bh}"></line>
+      ${s.perWeekdag.map((w, i) => `
+        <text x="${m.l + i * vak + vak / 2}" y="${h - 18}" text-anchor="middle">${DAGNAMEN[i].slice(0, 2)}</text>
+        <text x="${m.l + i * vak + vak / 2}" y="${h - 5}" text-anchor="middle" opacity="0.7">${pct(w.graad)}</text>`).join('')}
+    </svg>`;
+  }
+
+  function tekenUur(el) {
+    const s = DATA[bereik];
+    const uren = s.perUur.map((v, u) => ({ u, v })).filter((x) => x.u >= 5 && x.u <= 21);
+    const b = Math.max(280, el.clientWidth);
+    const h = 230;
+    const m = { l: 34, r: 10, t: 18, o: 30 };
+    const bb = b - m.l - m.r;
+    const bh = h - m.t - m.o;
+
+    const stappen = asStappen(Math.max(...uren.map((x) => x.v), 1));
+    const maxY = stappen[stappen.length - 1];
+    const x = (i) => m.l + (i / (uren.length - 1)) * bb;
+    const y = (v) => m.t + bh - (v / maxY) * bh;
+
+    const punten = uren.map((p, i) => `${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' L');
+    const kantoorVan = uren.findIndex((p) => p.u === DATA.startUur);
+    const kantoorTot = uren.findIndex((p) => p.u === DATA.eindUur);
+
+    el.innerHTML = `<svg viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" role="img"
+        aria-label="Gemiddelde bezetting per uur van de dag">
+      ${stappen.map((v) => `<line class="raster" x1="${m.l}" x2="${b - m.r}" y1="${y(v)}" y2="${y(v)}"></line>
+        <text x="${m.l - 7}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('')}
+      <rect class="kantoorband" x="${x(kantoorVan)}" y="${m.t}" width="${x(kantoorTot) - x(kantoorVan)}" height="${bh}"></rect>
+      <path class="vlak" d="M${x(0)},${m.t + bh} L${punten} L${x(uren.length - 1)},${m.t + bh} Z"></path>
+      <path class="lijn" d="M${punten}"></path>
+      <line class="as" x1="${m.l}" x2="${b - m.r}" y1="${m.t + bh}" y2="${m.t + bh}"></line>
+      ${uren.map((p, i) => (p.u % 3 === 0
+        ? `<text x="${x(i)}" y="${h - 10}" text-anchor="middle">${String(p.u).padStart(2, '0')}u</text>`
+        : '')).join('')}
+    </svg>`;
+  }
+
+  tekenIn($('#g-weekdag'), tekenWeekdag);
+  tekenIn($('#g-uur'), tekenUur);
+
+  function werkBij() {
+    const s = DATA[bereik];
+    $('#weekdag-uitleg').textContent =
+      `Gemiddeld over ${BEREIKNAAM[bereik]}. Vrijdag is de rustigste dag, met ` +
+      `${nl(s.perWeekdag[4].gemiddeld)} bezette plekken tegenover ${nl(Math.max(...s.perWeekdag.map((w) => w.gemiddeld)))} op de drukste dag.`;
+    $('#uur-uitleg').textContent =
+      `Gemiddeld aantal bezette plekken per uur, over ${BEREIKNAAM[bereik]}. Het gearceerde deel is de kantoorperiode van ${DATA.startUur} tot ${DATA.eindUur} uur.`;
+    tekenWeekdag($('#g-weekdag'));
+    tekenUur($('#g-uur'));
+  }
+
+  $('#keuze').addEventListener('click', (evt) => {
+    const knop = evt.target.closest('button[data-bereik]');
+    if (!knop) return;
+    bereik = knop.dataset.bereik;
+    for (const k of $('#keuze').querySelectorAll('button')) {
+      k.setAttribute('aria-pressed', String(k === knop));
+    }
+    werkBij();
+  });
+
+  werkBij();
+
+  /* ── Tabellen ──────────────────────────────────────────────────────── */
+
+  const opGebruik = [...DATA.perWerkplek].sort((a, b) => b.bezettingsgraad - a.bezettingsgraad);
+  const hoogste = opGebruik[0].bezettingsgraad;
+
+  $('#werkplekken tbody').innerHTML = opGebruik.map((w) => `
+    <tr>
+      <td>${w.naam}</td>
+      <td class="getal">${pct(w.bezettingsgraad)}</td>
+      <td><div class="balk"><i style="width:${((w.bezettingsgraad / hoogste) * 100).toFixed(1)}%"></i></div></td>
+      <td class="getal">${w.dagenGebruikt} van ${w.werkdagen}</td>
+      <td class="getal">${nl(w.bezetteUren, 0)}</td>
+    </tr>`).join('');
+
+  $('#gesloten tbody').innerHTML = DATA.geslotenDagen.map((d) => `
+    <tr>
+      <td>${datumLang(d.datum)}</td>
+      <td>${d.reden}</td>
+      <td class="getal">${nl(d.gemiddeld, 2)}</td>
+    </tr>`).join('');
+
+  /* ── Kopieerknop ───────────────────────────────────────────────────── */
+
+  $('#kopieer').addEventListener('click', async () => {
+    const kop = ['datum', 'weekdag', 'werkdag', 'juli of augustus', 'feestdag of sluiting', 'gemiddeld bezet', 'bezettingsgraad', 'piek'];
+    const regels = DATA.perDag.map((d) => [
+      d.datum,
+      ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'][d.weekdag],
+      d.werkdag ? 'ja' : 'nee',
+      d.zomer ? 'ja' : 'nee',
+      d.gesloten ?? '',
+      nl(d.gemiddeld, 2),
+      nl(d.graad * 100, 1) + '%',
+      nl(d.piek, 2),
+    ].join('\t'));
+
+    const tekst = [kop.join('\t'), ...regels].join('\n');
+    const melding = $('#kopieermelding');
+
+    try {
+      await navigator.clipboard.writeText(tekst);
+      melding.textContent = `${DATA.perDag.length} dagen gekopieerd. Plak ze in Excel.`;
+    } catch {
+      melding.textContent = 'Kopiëren lukte niet in deze weergave. Open de pagina in een browsertabblad en probeer opnieuw.';
+    }
+    setTimeout(() => { melding.textContent = ''; }, 6000);
+  });
+
+  /* ── Voettekst ─────────────────────────────────────────────────────── */
+
+  $('#voet').textContent =
+    `Bron: bezettingssensoren van Disruptive Technologies, werkwijk ${DATA.wijk}. ` +
+    `Gegevens opgehaald op ${datumLang(DATA.gemaakt.slice(0, 10))}. ` +
+    `Een sensor meldt een wissel gemiddeld zes minuten nadat die zich voordoet.`;
+</script>
