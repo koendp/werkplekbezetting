@@ -1,0 +1,9 @@
+# De Vercel CLI kijkt niet naar .gitignore. Zonder dit bestand gaan de
+# sleutels en de ruwe sensordata mee naar Vercel.
+.env
+node_modules/
+data/*
+!data/momentopname.js
+rapporten/
+start.bat
+briefing-*.md
