@@ -155,6 +155,11 @@
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   caption { text-align: left; font-size: 12px; color: var(--ink-3); padding-bottom: 8px; }
   th { text-align: left; font-weight: 700; font-size: 12px; color: var(--ink-3); padding: 7px 12px 7px 0; border-bottom: 1px solid var(--as); white-space: nowrap; }
+
+  /* Groepskop boven kolommen die iets anders meten dan hun buren. */
+  thead tr.groepkop th { font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; padding-bottom: 5px; border-bottom: 0; }
+  thead tr.groepkop th[colspan] { color: var(--oranje); border-bottom: 2px solid var(--oranje); }
+  thead tr.groepkop th[rowspan] { vertical-align: bottom; text-transform: none; letter-spacing: 0; font-size: 12px; }
   td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--raster); }
   tr:last-child td { border-bottom: 0; }
   .getal, th.getal { text-align: right; font-variant-numeric: tabular-nums; }
@@ -200,6 +205,7 @@
   svg .vlak { fill: var(--oranje); opacity: 0.13; }
   svg .zomerband { fill: var(--neutraal); opacity: 0.1; }
   svg .kantoorband { fill: var(--oranje); opacity: 0.07; }
+  svg .stamband { fill: var(--oranje); opacity: 0.12; }
   svg .feest { stroke: var(--as); stroke-width: 1; stroke-dasharray: 2 2; }
   svg .waardelabel { fill: var(--ink); font-weight: 700; }
 
@@ -279,6 +285,35 @@
     </p>
   </section>
 
+  <!-- ── Stamtijden ────────────────────────────────────────────────────── -->
+
+  <section>
+    <h2>Tijdens de stamtijden</h2>
+    <p class="uitleg">
+      De stamtijden zijn 9 tot 12 uur en 14 tot 16 uur. Dan wordt iedereen verwacht aanwezig
+      te zijn, dus dit is de bezetting op de momenten die er het meest toe doen. De middagpauze
+      en de randuren tellen hier niet mee.
+    </p>
+    <div class="tegels" id="stamtegels"></div>
+    <div class="kaart hoes">
+      <table id="stamtabel">
+        <caption>Gemiddeld aantal gelijktijdig bezette werkplekken, uitgemiddeld over de werkdagen van elke periode.</caption>
+        <thead>
+          <tr>
+            <th>Periode</th>
+            <th class="getal">Werkdagen</th>
+            <th class="getal">Kantooruren 8-17u</th>
+            <th class="getal">Stamtijden</th>
+            <th class="getal">Van de 41</th>
+            <th class="getal">Ochtend 9-12u</th>
+            <th class="getal">Namiddag 14-16u</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- ── Per dag ───────────────────────────────────────────────────────── -->
 
   <section>
@@ -328,6 +363,7 @@
             <th>Weekdag</th>
             <th class="getal">Dagen</th>
             <th class="getal">Gemiddeld bezet</th>
+            <th class="getal">Stamtijden</th>
             <th class="getal">Drukste moment</th>
             <th class="getal">Verschillende plekken</th>
             <th class="getal">Hoogste</th>
@@ -420,33 +456,39 @@
   <section>
     <h2>Per werkplek over het hele jaar</h2>
     <p class="uitleg">
-      Hoeveel procent van de kantooruren elke werkplek bezet was, en op welk deel van de
-      maandagen, dinsdagen enzovoort hij in gebruik was. Zo zie je of een bepaalde plek op een
-      vaste dag van de week stil blijft.
+      Deze tabel zet twee verschillende dingen naast elkaar. <strong>Hoe lang</strong> een plek
+      bezet was, als deel van alle kantooruren in het jaar. En <strong>hoe vaak</strong> hij aan
+      bod kwam, als deel van de dagen waarop hij minstens even gebruikt werd. Die tweede groep
+      staat ook per weekdag, zodat je ziet of een plek op een vaste dag van de week stil blijft.
     </p>
     <div class="legende">
-      <span><i style="background:var(--seq-7, var(--oranje))"></i>vaak in gebruik op die weekdag</span>
-      <span><i style="background:var(--seq-2, var(--raster))"></i>zelden</span>
+      <span><i style="background:var(--seq-5)"></i>vaak in gebruik op die weekdag</span>
+      <span><i style="background:var(--seq-2)"></i>zelden</span>
     </div>
     <div class="kaart hoes">
       <table id="werkplekken">
         <thead>
+          <tr class="groepkop">
+            <th rowspan="2">Werkplek</th>
+            <th colspan="2" class="getal">Hoe lang bezet</th>
+            <th colspan="6" class="getal">Hoe vaak in gebruik</th>
+            <th rowspan="2" class="getal">Uren bezet</th>
+          </tr>
           <tr>
-            <th>Werkplek</th>
-            <th class="getal">Bezetting</th>
+            <th class="getal">Deel van de kantooruren</th>
             <th style="min-width:110px">&nbsp;</th>
-            <th class="getal">Dagen gebruikt</th>
+            <th class="getal">Alle dagen</th>
             <th class="getal" title="maandag">ma</th>
             <th class="getal" title="dinsdag">di</th>
             <th class="getal" title="woensdag">wo</th>
             <th class="getal" title="donderdag">do</th>
             <th class="getal" title="vrijdag">vr</th>
-            <th class="getal">Uren bezet</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
+    <p class="melding" id="werkplek-voorbeeld"></p>
     <p class="melding" id="werkplek-noot"></p>
   </section>
 
@@ -464,7 +506,9 @@
       </p>
       <p>
         <strong>Kantooruren</strong> zijn hier 8 tot 17 uur. <strong>Werkdagen</strong> zijn
-        maandag tot vrijdag; weekends tellen nergens mee. Alle tijden staan in de tijdzone
+        maandag tot vrijdag; weekends tellen nergens mee. De <strong>stamtijden</strong> zijn
+        9 tot 12 uur en 14 tot 16 uur. Die cijfers komen uit de uurgemiddelden, en zijn er
+        daarom per weekdag en per periode, niet per afzonderlijke dag. Alle tijden staan in de tijdzone
         Brussel.
       </p>
       <p>
@@ -590,6 +634,54 @@
     `de ${hj.werkdagen} werkdagen, oftewel ${pct(hj.volledigeDagen / hj.werkdagen)}. ` +
     `Let op het verschil met de bezetting hierboven: dat telt hoeveel plekken op hetzelfde moment ` +
     `bezet zijn, dit telt hoeveel verschillende plekken er in de loop van de dag gebruikt werden.`;
+
+  /* ── Stamtijden ────────────────────────────────────────────────────── */
+
+  // Uurwaarde u staat voor het blok u:00 tot u+1:00.
+  const STAM_OCHTEND = [9, 10, 11];
+  const STAM_NAMIDDAG = [14, 15];
+  const STAM = [...STAM_OCHTEND, ...STAM_NAMIDDAG];
+  const gemUren = (rij, uren) => uren.reduce((a, u) => a + rij[u], 0) / uren.length;
+  const stam = (rij) => gemUren(rij, STAM);
+  const kantoor = (rij) => gemUren(rij, Array.from({ length: DATA.eindUur - DATA.startUur }, (_, i) => DATA.startUur + i));
+
+  {
+    const n = DATA.aantalPlekken;
+    const st = stam(zz.perUur);
+    const och = gemUren(zz.perUur, STAM_OCHTEND);
+    const nam = gemUren(zz.perUur, STAM_NAMIDDAG);
+    const drukWd = zz.perWeekdag.map((w) => ({ w, v: stam(zz.perWeekdagUur[w.weekdag]) })).sort((a, b) => b.v - a.v);
+
+    $('#stamtegels').innerHTML = [
+      ['Stamtijden, zonder juli en augustus', nl(st), `${pct(st / n)} van de ${n} plekken`],
+      ['Ochtend 9-12u', nl(och), `${pct(och / n)} van de plekken`],
+      ['Namiddag 14-16u', nl(nam), `${pct(nam / n)} van de plekken`],
+      ['Drukste en rustigste dag', `${DAGNAMEN[drukWd[0].w.weekdag].slice(0, 2)} ${nl(drukWd[0].v)}`,
+        `${DAGNAMEN[drukWd[drukWd.length - 1].w.weekdag]} ${nl(drukWd[drukWd.length - 1].v)}`],
+    ].map(([titel, waarde, bij]) => `
+      <div class="tegel">
+        <div class="titel">${titel}</div>
+        <div class="waarde">${waarde}</div>
+        <div class="bij">${bij}</div>
+      </div>`).join('');
+
+    $('#stamtabel tbody').innerHTML = [
+      ['Heel jaar, alle werkdagen', DATA.heelJaar, false],
+      ['Zonder juli en augustus', DATA.zonderZomer, true],
+      ['Enkel juli en augustus', DATA.alleenZomer, false],
+      ['Heel jaar, zonder feestdagen en kerstsluiting', DATA.open, false],
+      ['Zonder zomer, feestdagen en kerstsluiting', DATA.openZonderZomer, false],
+    ].map(([naam, s, nadruk]) => `
+      <tr${nadruk ? ' class="nadruk"' : ''}>
+        <td>${naam}</td>
+        <td class="getal">${s.werkdagen}</td>
+        <td class="getal">${nl(kantoor(s.perUur))}</td>
+        <td class="getal">${nl(stam(s.perUur))}</td>
+        <td class="getal">${pct(stam(s.perUur) / n)}</td>
+        <td class="getal">${nl(gemUren(s.perUur, STAM_OCHTEND))}</td>
+        <td class="getal">${nl(gemUren(s.perUur, STAM_NAMIDDAG))}</td>
+      </tr>`).join('');
+  }
 
   /* ── Vergelijkingstabel ────────────────────────────────────────────── */
 
@@ -812,6 +904,12 @@
       ${stappen.map((v) => `<line class="raster" x1="${m.l}" x2="${b - m.r}" y1="${y(v)}" y2="${y(v)}"></line>
         <text x="${m.l - 7}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('')}
       <rect class="kantoorband" x="${x(kantoorVan)}" y="${m.t}" width="${x(kantoorTot) - x(kantoorVan)}" height="${bh}"></rect>
+      ${[[9, 12], [14, 16]].map(([van, tot]) => {
+        // Het punt op uur u is het gemiddelde van u:00 tot u+1:00, dus de band loopt van punt van tot punt tot-1.
+        const a = uren.findIndex((p) => p.u === van);
+        const z = uren.findIndex((p) => p.u === tot - 1);
+        return `<rect class="stamband" x="${x(a)}" y="${m.t}" width="${x(z) - x(a)}" height="${bh}"></rect>`;
+      }).join('')}
       <path class="vlak" d="M${x(0)},${m.t + bh} L${punten} L${x(uren.length - 1)},${m.t + bh} Z"></path>
       <path class="lijn" d="M${punten}"></path>
       <line class="as" x1="${m.l}" x2="${b - m.r}" y1="${m.t + bh}" y2="${m.t + bh}"></line>
@@ -887,6 +985,7 @@
     const gebruiktGem = dagen.length ? dagen.reduce((a, d) => a + d.gebruikt, 0) / dagen.length : 0;
     const gebruiktHoogste = Math.max(...dagen.map((d) => d.gebruikt), 0);
     const volledig = dagen.filter((d) => d.gebruikt >= n).length;
+    const stamZoom = stam(weekdag === 'alle' ? s.perUur : s.perWeekdagUur[Number(weekdag)]);
 
     // ── Teksten bij de weekdaggrafieken
     const rustigste = [...s.perWeekdag].sort((a, b) => a.gemiddeld - b.gemiddeld)[0];
@@ -915,6 +1014,7 @@
         <td>${DAGNAMEN[w.weekdag]}</td>
         <td class="getal">${w.dagen}</td>
         <td class="getal">${nl(w.gemiddeld)}<span style="color:var(--ink-3)"> &middot; ${pct(w.graad)}</span></td>
+        <td class="getal">${nl(stam(s.perWeekdagUur[w.weekdag]))}<span style="color:var(--ink-3)"> &middot; ${pct(stam(s.perWeekdagUur[w.weekdag]) / n)}</span></td>
         <td class="getal">${nl(w.piek)}</td>
         <td class="getal">${nl(w.gebruiktGemiddeld)}</td>
         <td class="getal">${w.gebruiktHoogste}</td>
@@ -925,6 +1025,7 @@
     // ── Tegels bij de ingezoomde weekdag
     $('#zoomtegels').innerHTML = [
       ['Gemiddeld gelijktijdig bezet', nl(gem), `${pct(gem / n)} van de ${n} plekken`],
+      ['Tijdens de stamtijden', nl(stamZoom), `${pct(stamZoom / n)}, 9-12u en 14-16u`],
       ['Drukste moment', nl(piekHoogste), `${pct(piekHoogste / n)}, hoogste van de periode`],
       ['Verschillende plekken per dag', nl(gebruiktGem), `hoogste ${gebruiktHoogste} van de ${n}`],
       ['Dagen met alle plekken gebruikt', String(volledig), `van de ${dagen.length} dagen${dagen.length ? ` &middot; ${pct(volledig / dagen.length)}` : ''}`],
@@ -937,7 +1038,8 @@
 
     $('#uur-uitleg').textContent =
       `Gemiddeld aantal gelijktijdig bezette plekken per uur, over ${selectieLabel()}. ` +
-      `Het gearceerde deel is de kantoorperiode van ${DATA.startUur} tot ${DATA.eindUur} uur.`;
+      `Het licht gearceerde deel is de kantoorperiode van ${DATA.startUur} tot ${DATA.eindUur} uur, ` +
+      `de donkerder stroken zijn de stamtijden. Tijdens de stamtijden: ${nl(stamZoom)} bezette plekken.`;
 
     $('#verdeling-uitleg').textContent =
       `Aantal dagen waarop zoveel verschillende plekken aan bod kwamen, over ${selectieLabel()}. ` +
@@ -1002,6 +1104,24 @@
       ${w.perWeekdag.map((aantal, i) => cel(aantal, DATA.werkdagenPerWeekdag[i])).join('')}
       <td class="getal">${nl(w.bezetteUren, 0)}</td>
     </tr>`).join('');
+
+  // Een uitgewerkt voorbeeld met de bovenste rij, want de twee percentages in
+  // deze tabel meten iets anders en lijken elkaar anders tegen te spreken.
+  const vb = opGebruik[0];
+  const kantooruren = vb.werkdagen * (DATA.eindUur - DATA.startUur);
+  const bezetteKantooruren = vb.bezettingsgraad * kantooruren;
+  const urenPerGebruiktedag = bezetteKantooruren / vb.dagenGebruikt;
+  const weekdagStukken = vb.perWeekdag
+    .map((aantal, i) => `${DAGNAMEN[i].slice(0, 2)} ${aantal} van ${DATA.werkdagenPerWeekdag[i]}`)
+    .join(', ');
+
+  $('#werkplek-voorbeeld').textContent =
+    `Een voorbeeld met de bovenste rij. ${vb.naam} was ${pct(vb.bezettingsgraad)} van de ` +
+    `${nl(kantooruren, 0)} kantooruren van het jaar bezet, samen ongeveer ${nl(bezetteKantooruren, 0)} uur. ` +
+    `Dat lag verspreid over ${vb.dagenGebruikt} van de ${vb.werkdagen} werkdagen, dus ruwweg ` +
+    `${nl(urenPerGebruiktedag)} uur op elke dag dat de plek gebruikt werd. ` +
+    `De weekdagkolommen zijn diezelfde ${vb.dagenGebruikt} dagen opgesplitst: ${weekdagStukken}. ` +
+    `Het eerste percentage zegt dus hoe lang, de rest hoe vaak.`;
 
   const zwakstePlek = [...DATA.perWerkplek].sort((a, b) => a.bezettingsgraad - b.bezettingsgraad)[0];
   const vrijdagStil = DATA.perWerkplek.filter((w) => w.perWeekdag[4] / DATA.werkdagenPerWeekdag[4] < 0.4).length;
