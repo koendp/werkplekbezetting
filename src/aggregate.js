@@ -42,7 +42,7 @@ function offsetMs(ms) {
 }
 
 /** Zet UTC-tijd om naar lokale tijd, uitgedrukt alsof het UTC was. */
-function naarLokaal(ms) {
+export function naarLokaal(ms) {
   return ms + offsetMs(ms);
 }
 
